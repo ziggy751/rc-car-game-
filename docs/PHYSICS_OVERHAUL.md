@@ -1,5 +1,8 @@
 # Vehicle dynamics overhaul
 
+> Historical baseline report. The current two-vehicle, three-band tyre, graphics and environment upgrade is documented in [GRAPHICS_REALISM_UPGRADE.md](GRAPHICS_REALISM_UPGRADE.md).
+
+
 This replaces the first release's vehicle controller while preserving the existing Three.js park, workshop, build saves, map, progression, photo export and static Cloudflare deployment.
 
 ## What was physically wrong

@@ -1,5 +1,8 @@
 # Physics overhaul verification
 
+> Historical baseline report. The current two-vehicle, three-band tyre, graphics and environment upgrade is documented in [GRAPHICS_REALISM_UPGRADE.md](GRAPHICS_REALISM_UPGRADE.md).
+
+
 Validated on 17 November 2026 with Node 24.22.1, npm 11.9.0, Rapier 0.19 and system Chromium on the managed Linux cloud machine. Existing reference assets, route progression, local build saves and static deployment remain intact.
 
 ## Automated physical regression

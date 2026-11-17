@@ -1,0 +1,194 @@
+[
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/01_dry_dirt_spray.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "4713b0fad4dd630b005d948294bf5edef409dd591172f441c78f3ce61fe16da2"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/02_fine_dust_cloud.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "5ddb075a4194696325a8b78719cc4fafa50c89b6b22c6fc5844ec596218f79f1"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/03_gravel_ejection.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "44f2a8a5e0744a301a9bf616e871a600bb5a799e167b06406c8229889d1bdca2"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/04_wet_mud_splash.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "2f99ef9412231669e671d395b8824bc25650df1b48f2c31a9677201294c669da"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/05_mud_buildup.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "156a49346a4d53ff1d43602bb8471698bc3d35f4cc6b1d891dd1c41b21295f27"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/06_muddy_tyre_ruts.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "a81b880000336979a9b5c61e389d598148bfa2012740affc47576a7dcda32421"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/07_soft_tyre_rock_contact.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "9252270ec426c887fb7087c3c83cd6396bf81d212587a53a8a83ab6a5363c2b0"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/08_stiff_tyre_rock_contact.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "171400a2ee4f3a074bac42248e51fd8424d51ec0d39b58e1c892c6ced3b64fd5"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/09_creek_entry_splashes.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "42437020c56cd52d8538633cf950de943a17b3eada837b4fc4e8caeeb5344b07"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/10_wet_rock_contact.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "23a6629e0d455a6d31a8bc3228631c8348a56a4469078615b5c215d1348ee8bd"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/11_grass_bending.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "b013ded11ceb61658c3aeaca3ec4e540089d621ad42e7e9c7999b23720fb5d91"
+  },
+  {
+    "file": "01_Wheelspin_Dirt_Mud_Water/12_leaves_twigs.png",
+    "width": 362,
+    "height": 362,
+    "sha256": "590429f5ff762419363d196ba95fe8426c240be9a37b9c9707868b0b5f5847b3"
+  },
+  {
+    "file": "02_Materials_Lighting_Weather/crawler_models_chassis.png",
+    "width": 1536,
+    "height": 210,
+    "sha256": "3bc795da812126ae44f638a18f2d0f33bc81e22b93c4e3457e4be870a2acde10"
+  },
+  {
+    "file": "02_Materials_Lighting_Weather/pbr_materials_graphics_presets.png",
+    "width": 1536,
+    "height": 155,
+    "sha256": "206b010d5489649b29db06e676269682168e0d1bc983509a5c13e89ea56339bf"
+  },
+  {
+    "file": "02_Materials_Lighting_Weather/rc_course_scale_and_mud_progression.png",
+    "width": 1536,
+    "height": 129,
+    "sha256": "a3c84cdfdd3f7cc608b4d117254db8ffdf7302506abede40261aca5f100919a4"
+  },
+  {
+    "file": "02_Materials_Lighting_Weather/tyres_suspension_dirt_mud.png",
+    "width": 1536,
+    "height": 210,
+    "sha256": "bd8e583375a0055d5d8e470742f08e3e322e2874ec169e8d2383bda18d1b52ee"
+  },
+  {
+    "file": "02_Materials_Lighting_Weather/water_and_trail_surfaces.png",
+    "width": 1536,
+    "height": 180,
+    "sha256": "c1d576705f5658a718fda576c79bb41a76a054da0619690668919e832784af49"
+  },
+  {
+    "file": "02_Materials_Lighting_Weather/weather_lighting_garage_tuning.png",
+    "width": 1536,
+    "height": 184,
+    "sha256": "6a514e75a981ef8a2549cca9e56b41211f1353b2ad450f72f6cb4c39306db24b"
+  },
+  {
+    "file": "03_RC_Scale_Environments/forest_rock_crawling_and_stream.png",
+    "width": 1672,
+    "height": 941,
+    "sha256": "f1b452d831a6fb7dfb09c89075f0017f67b5f048062876988f3a9aca63ebfe72"
+  },
+  {
+    "file": "03_RC_Scale_Environments/large_mountain_crawler_park.png",
+    "width": 1672,
+    "height": 941,
+    "sha256": "0dea2661128eba286c51c96388b6805f1b01050b1a321d201d6ff34bccefe058"
+  },
+  {
+    "file": "03_RC_Scale_Environments/trail_crawler_parts_course_reference.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "2ac77f22dd49f6daddd1f08195694b834c26fd227488c831798a2018b8e2dfbe"
+  },
+  {
+    "file": "04_Vehicles_Suspension_Garage/chassis_components_and_suspension.png",
+    "width": 1672,
+    "height": 941,
+    "sha256": "9361f57db77433d3ce880b53e8fc730230317c31f3193369b5e91c472e10d2ea"
+  },
+  {
+    "file": "04_Vehicles_Suspension_Garage/detailed_hobby_workshop.png",
+    "width": 836,
+    "height": 471,
+    "sha256": "51259a3eed88f7b78eaaf909c563d8dfffbcbf6a31e5d91214bc6a4495106e6b"
+  },
+  {
+    "file": "04_Vehicles_Suspension_Garage/exposed_rc_chassis_on_rocks.png",
+    "width": 836,
+    "height": 470,
+    "sha256": "652fae611da83931dbd0f1231ef84cc2b1ab1865cc1d6eb052a508c55edb7ce8"
+  },
+  {
+    "file": "04_Vehicles_Suspension_Garage/garage_customization_ui_reference.png",
+    "width": 1672,
+    "height": 941,
+    "sha256": "6ea61d53aaa29a4acc3bab7154e65029ef2d4c4faa3879eadec1e1febb79a60f"
+  },
+  {
+    "file": "04_Vehicles_Suspension_Garage/miniature_forest_crawler_course.png",
+    "width": 836,
+    "height": 471,
+    "sha256": "1a4591d3861658fb75e05c2ace7b2c8ab368cf015ac45e2114ce62ce2ef5321b"
+  },
+  {
+    "file": "04_Vehicles_Suspension_Garage/soft_tyre_gripping_rock.png",
+    "width": 836,
+    "height": 470,
+    "sha256": "16c65f079823f22ace187b597659363d301b29b8eac7bd18ebfd927aaacfdf18"
+  },
+  {
+    "file": "04_Vehicles_Suspension_Garage/technical_physics_and_tuning_sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "21d92c5072f35f637224b7ebf4a5f3e0d44e26ebceed685da944ab905bfb7e5c"
+  },
+  {
+    "file": "05_Full_Reference_Sheets/graphics_materials_weather_full.png",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "b3a99484dee87eb98c4eb5c8dc0fc0074b5b5e955f8360a1085efdca821ef050"
+  },
+  {
+    "file": "05_Full_Reference_Sheets/terrain_interaction_12_panel_full.png",
+    "width": 1448,
+    "height": 1086,
+    "sha256": "8ed2812a20be955356f578cfb9c5f9ac5cce38a9e5c2dba5638c70894d4a0c47"
+  },
+  {
+    "file": "05_Full_Reference_Sheets/varied_surfaces_weather_parts_full.png",
+    "width": 1672,
+    "height": 941,
+    "sha256": "fa3b593d767b035ef6856627e6daa46154886a186ca363f9d07095383dcc4042"
+  },
+  {
+    "file": "05_Full_Reference_Sheets/vehicle_classes_and_maps_full.png",
+    "width": 1672,
+    "height": 941,
+    "sha256": "931e7a34774c2ff44628254c59e177c76e6756adcf08a3fe05181337af659bae"
+  }
+]

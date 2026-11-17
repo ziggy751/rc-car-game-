@@ -1,6 +1,8 @@
 # Ridgebound RC
 
-A browser RC crawler simulator built from an empty repository using the supplied 130-image reference pack. **This is a playable simulator under development, not a claim of laboratory-calibrated realism.** The original R1 Expedition has separate mechanical meshes, force-based wheel contact, an inspection workshop, tuning, and a small connected forest park.
+A browser RC crawler simulator using TypeScript, Three.js and Rapier. Two original hobby-grade rigs, separate selection garage and tuning workshop, four RC-scale courses, compliant tyre contacts and contact-driven environmental effects are implemented. The art is generated 3D geometry and PBR materials; the supplied reference images stay outside the game bundle. This remains a simulator under development, with reduced tyre/soil/water models and further production art work needed.
+
+See [the current graphics and realism upgrade report](docs/GRAPHICS_REALISM_UPGRADE.md) for the reference audit, implemented systems, validation and remaining work.
 
 ## Run
 
@@ -33,9 +35,9 @@ The browser check uses `/usr/bin/chromium` on the cloud machine and writes scree
 | Space | Brake |
 | R | Recover at current position |
 | C | Chase / low RC / body / orbit / suspension / cinematic camera |
-| G / M | Workshop / map |
+| G / M | Tuning workshop / pause menu |
 | P | Pause for photo mode |
-| Esc | Exit photo mode or return to trail |
+| Esc | Exit photo mode or toggle pause menu |
 | Drag / wheel | Orbit / zoom in workshop, orbit camera and photo mode |
 | Gamepad left stick / RT / LT | Analogue steering / forward / reverse |
 
@@ -49,7 +51,7 @@ The existing park, workshop, shell inspection, paint, saved builds, route gates,
 
 Use the **trail map → Vehicle physics proving ground** for turning circles, articulation, inclines and surface lanes. **F2** toggles collision geometry and physical telemetry. **Shift** holds precision crawl mode. **Settings → Transmitter bindings** remaps driving controls. C now cycles six views, including suspension and cinematic cameras.
 
-Read the [complete physics report](docs/PHYSICS_OVERHAUL.md) and [verification record](docs/VALIDATION.md). Important limits: radial tyre compliance is a reduced model, differential locking uses projected angular coupling rather than full meshed gears, and the servo's damping is not an exact electronic current limit. Alternate three-link/Panhard chassis, soil deformation and measured physical-crawler calibration still require development. The procedural art remains short of the supplied photorealistic references. A dealership, broad vehicle collection, full open world and online accounts are not implemented.
+Read the [complete physics report](docs/PHYSICS_OVERHAUL.md) and [verification record](docs/VALIDATION.md). Important limits: radial tyre compliance is a reduced model, differential locking uses projected angular coupling rather than full meshed gears, and the servo's damping is not an exact electronic current limit. Alternate three-link/Panhard chassis, soil deformation and measured physical-crawler calibration still require development. The procedural art remains short of the supplied photorealistic references. Vehicle selection/purchase/sale is implemented for the two original rigs. A broad vehicle collection, full open world and online accounts require further work.
 
 ## Architecture and references
 
@@ -57,6 +59,6 @@ See [architecture](docs/ARCHITECTURE.md) and the [complete 130-image reference r
 
 ## Cloudflare
 
-Run `npm ci` and `npm run build`; deploy **`dist/`** with Cloudflare Pages (build command `npm run build`, output `dist`). Alternatively `wrangler.toml` configures Worker static assets; use an authenticated Wrangler installation and run `wrangler deploy`. Publication requires your Cloudflare account and was not performed here. The game runs entirely as static assets; no Cloudflare credentials are needed for development.
+Run `npm ci` and `npm run build`; deploy **`dist/`** with Cloudflare Pages (build command `npm run build`, output `dist`). Alternatively `wrangler.toml` configures Worker static assets; use an authenticated Wrangler installation and run `wrangler deploy`. A push to the connected GitHub main branch lets Cloudflare run this build. A successful local build or Git push does not establish that Cloudflare has completed its deployment. The game runs entirely as static assets; no Cloudflare credentials are needed for development.
 
 The large Rapier physics chunk includes its WASM payload. It is compressed by the host but is still a first-load cost. Geometry and materials are generated locally at launch and batched; neither the reference ZIP nor contact sheets enter the production bundle.

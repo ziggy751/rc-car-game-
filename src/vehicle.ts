@@ -1,7 +1,10 @@
 import * as T from 'three';
+import { surfaceMaterial } from './material-library';
+import { weatherMaterial, type SoilUniforms } from './environment-effects';
 import type { Simulation, VehiclePose } from './physics';
 import { tyreMaterial } from './dynamics/deformation';
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { buildBody, railGeometry } from './body-models';
+import type { VehicleId } from './catalogue';
 import { box, mesh, metal, rod, tube, label, noiseTexture } from './materials';
 export const wheelPositions = [
   [-0.128, 0, 0.162],
@@ -10,6 +13,11 @@ export const wheelPositions = [
   [0.128, 0, -0.162],
 ];
 export class Crawler {
+  soilUniforms: SoilUniforms = {
+    soil: { value: 0 },
+    wet: { value: 0 },
+    vehicleInverse: { value: new T.Matrix4() },
+  };
   battery = new T.Group();
   root = new T.Group();
   shell = new T.Group();
@@ -18,38 +26,38 @@ export class Crawler {
   axles: T.Group[] = [];
   springs: T.Group[] = [];
   links: T.Mesh[] = [];
-  paint = metal('#c48745', 0.3, 0.48);
+  paint = new T.MeshPhysicalMaterial({
+    color: '#496d62',
+    roughness: 0.39,
+    metalness: 0.12,
+    clearcoat: 0.65,
+    clearcoatRoughness: 0.3,
+    side: T.DoubleSide,
+  });
   rim = metal('#be9d68', 0.35, 0.85);
   deformations: ReturnType<typeof tyreMaterial>[] = [];
   radius = 0.059;
   spin = [0, 0, 0, 0];
-  constructor() {
+  constructor(public vehicle: VehicleId = 'r1') {
     const black = metal('#171c1d', 0.52, 0.65),
       steel = metal('#79848a', 0.24, 0.9),
       red = metal('#b93f22', 0.3, 0.6),
-      rubber = new T.MeshStandardMaterial({
-        color: '#151718',
-        roughness: 0.94,
-        map: noiseTexture('rubber'),
-      });
+      rubber = surfaceMaterial('rubber');
     this.root.add(this.shell, this.mechanics, this.battery);
     const c = this.mechanics;
     // Continuous ladder chassis rails, shaped through their raised axle clearances.
     for (const x of [-0.067, 0.067]) {
-      tube(
-        c,
-        black,
-        [
-          [x, 0.005, -0.23],
-          [x, 0.015, -0.19],
-          [x, 0.045, -0.13],
-          [x, 0.03, -0.06],
-          [x, 0.03, 0.07],
-          [x, 0.045, 0.15],
-          [x, 0.015, 0.23],
-        ],
-        0.007,
-      );
+      const rail = [
+        [x, 0.005, -0.23],
+        [x, 0.015, -0.19],
+        [x, 0.045, -0.13],
+        [x, 0.03, -0.06],
+        [x, 0.03, 0.07],
+        [x, 0.045, 0.15],
+        [x, 0.015, 0.23],
+      ];
+      if (this.vehicle === 'r1') mesh(railGeometry(rail), black, c);
+      else tube(c, black, rail, 0.0035);
       for (let z = -0.18; z < 0.2; z += 0.035) {
         const bolt = mesh(new T.CylinderGeometry(0.0023, 0.0023, 0.016, 6), steel, c, [x, 0.03, z]);
         bolt.rotation.z = Math.PI / 2;
@@ -105,197 +113,30 @@ export class Crawler {
       ],
       0.002,
     );
-    // Sculpted original short wheelbase expedition body, separate hood, cabin and rear tub.
-    const s = this.shell;
-    const rounded = (dims: number[], p: number[], m: T.Material = this.paint, r = 0.01) =>
-      mesh(new RoundedBoxGeometry(...(dims as [number, number, number]), 3, r), m, s, p);
-    // Watertight stamped side panels with true arched cut-outs, not a solid lower box.
-    for (const side of [-1, 1]) {
-      const shape = new T.Shape();
-      shape.moveTo(-0.225, 0.14);
-      shape.lineTo(0.224, 0.14);
-      shape.lineTo(0.244, 0.064);
-      for (let j = 0; j <= 28; j++) {
-        const a = (Math.PI * j) / 28;
-        shape.lineTo(0.162 + Math.cos(a) * 0.081, 0.015 + Math.sin(a) * 0.081);
-      }
-      shape.lineTo(0.081, 0.076);
-      shape.lineTo(-0.081, 0.076);
-      for (let j = 0; j <= 28; j++) {
-        const a = (Math.PI * j) / 28;
-        shape.lineTo(-0.162 + Math.cos(a) * 0.081, 0.015 + Math.sin(a) * 0.081);
-      }
-      shape.lineTo(-0.244, 0.064);
-      shape.closePath();
-      const panel = mesh(
-        new T.ExtrudeGeometry(shape, {
-          depth: 0.004,
-          bevelEnabled: true,
-          bevelSize: 0.0015,
-          bevelThickness: 0.0015,
-          bevelSegments: 2,
-          steps: 1,
-        }),
-        this.paint,
-        s,
-      );
-      panel.rotation.y = -Math.PI / 2;
-      panel.position.x = side * 0.104;
-    }
-    rounded([0.201, 0.023, 0.139], [0, 0.144, 0.134]);
-    rounded([0.196, 0.035, 0.027], [0, 0.135, -0.196]);
-    rounded([0.203, 0.025, 0.185], [0, 0.264, -0.047], this.paint, 0.008);
-    const glass = new T.MeshPhysicalMaterial({
-      color: '#203637',
-      roughness: 0.12,
-      metalness: 0.25,
-      transparent: true,
-      opacity: 0.72,
-      clearcoat: 1,
-    });
-    // Window surfaces and thin structural pillars, rather than a solid cuboid cabin.
-    const wind = box(s, glass, [0.184, 0.087, 0.003], [0, 0.209, 0.05]);
-    wind.rotation.x = -0.17;
-    box(s, glass, [0.184, 0.089, 0.003], [0, 0.211, -0.138]);
-    for (const x of [-0.103, 0.103]) {
-      for (const z of [0.054, -0.14])
-        rod(s, this.paint, [x, 0.159, z], [x * 0.93, 0.255, z - 0.012], 0.005);
-      rod(s, this.paint, [x, 0.162, -0.055], [x, 0.253, -0.055], 0.004);
-      box(s, glass, [0.002, 0.079, 0.075], [x, 0.211, -0.002]);
-      box(s, glass, [0.002, 0.079, 0.065], [x, 0.211, -0.1]);
-      box(s, this.paint, [0.005, 0.047, 0.179], [x, 0.145, -0.044]);
-      for (const z of [-0.015, -0.1]) {
-        box(s, black, [0.007, 0.004, 0.018], [x * 1.03, 0.169, z]);
-        box(s, steel, [0.007, 0.008, 0.005], [x * 1.04, 0.126, z]);
-      }
-      box(s, black, [0.013, 0.009, 0.26], [x * 1.13, 0.083, -0.03]);
-      box(s, black, [0.018, 0.025, 0.027], [x * 1.13, 0.207, 0.038]);
-      // Curved wheel arches, open below for visible suspension.
-      for (const z of [-0.162, 0.162]) {
-        const pts = [];
-        for (let j = 0; j <= 20; j++) {
-          const a = (Math.PI * j) / 20;
-          pts.push(new T.Vector3(x * 1.07, 0.015 + Math.sin(a) * 0.081, z + Math.cos(a) * 0.081));
+    for (const z of [-0.162, 0.162])
+      for (const side of [-1, 1]) {
+        box(c, black, [0.008, 0.058, 0.021], [side * 0.081, 0.051, z * 0.92]);
+        for (const y of [0.04, 0.06, 0.08]) {
+          const bolt = mesh(new T.CylinderGeometry(0.0018, 0.0018, 0.012, 6), steel, c, [
+            side * 0.081,
+            y,
+            z * 0.92,
+          ]);
+          bolt.rotation.z = Math.PI / 2;
         }
-        mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 24, 0.009, 8, false), black, s);
       }
-      const mark = mesh(new T.PlaneGeometry(0.098, 0.024), label('RIDGE / 01'), s, [
-        x * 1.015,
-        0.14,
-        -0.05,
-      ]);
-      mark.rotation.y = x > 0 ? Math.PI / 2 : -Math.PI / 2;
-    }
-    for (const x of [-0.08, 0.08]) {
-      rod(s, black, [x, 0.157, 0.083], [x, 0.157, 0.176], 0.0012);
-      box(s, black, [0.011, 0.002, 0.027], [x, 0.159, 0.101]);
-    }
-    for (const side of [-1, 1])
-      for (const z of [-0.162, 0.162]) {
-        const shape = new T.Shape();
-        for (let j = 0; j <= 32; j++) {
-          const a = (Math.PI * j) / 32;
-          const u = Math.cos(a) * 0.082,
-            v = 0.015 + Math.sin(a) * 0.082;
-          j === 0 ? shape.moveTo(u, v) : shape.lineTo(u, v);
-        }
-        for (let j = 32; j >= 0; j--) {
-          const a = (Math.PI * j) / 32;
-          shape.lineTo(Math.cos(a) * 0.089, 0.015 + Math.sin(a) * 0.089);
-        }
-        shape.closePath();
-        const lip = mesh(
-          new T.ExtrudeGeometry(shape, { depth: 0.021, bevelEnabled: false }),
-          black,
-          s,
-        );
-        lip.rotation.y = -Math.PI / 2;
-        lip.position.set(side < 0 ? -0.104 : 0.125, 0, z);
-      }
-    // Grille, recessed slots, headlight lens rings and front winch.
-    rounded([0.203, 0.066, 0.016], [0, 0.113, 0.208]);
-    for (let x = -0.045; x <= 0.045; x += 0.015)
-      rounded([0.007, 0.041, 0.004], [x, 0.116, 0.218], black, 0.003);
-    for (const x of [-0.077, 0.077]) {
-      const ring = mesh(new T.CylinderGeometry(0.019, 0.019, 0.006, 32), black, s, [
-        x,
-        0.123,
-        0.22,
-      ]);
-      ring.rotation.x = Math.PI / 2;
-      const lens = mesh(
-        new T.CylinderGeometry(0.014, 0.014, 0.007, 32),
-        new T.MeshStandardMaterial({
-          color: '#ffe6b0',
-          emissive: '#ffcf80',
-          emissiveIntensity: 1.7,
-          roughness: 0.16,
-        }),
-        s,
-        [x, 0.123, 0.224],
-      );
-      lens.rotation.x = Math.PI / 2;
-      for (let j = -1; j <= 1; j++)
-        box(s, steel, [0.001, 0.022, 0.001], [x + j * 0.006, 0.123, 0.229]);
-      box(
-        s,
-        new T.MeshStandardMaterial({
-          color: '#ba2d19',
-          emissive: '#841a0b',
-          emissiveIntensity: 0.4,
-        }),
-        [0.018, 0.024, 0.006],
-        [x, 0.13, -0.213],
-      );
-    }
-    rounded([0.235, 0.019, 0.03], [0, 0.072, 0.234], black, 0.004);
-    rounded([0.23, 0.018, 0.02], [0, 0.075, -0.22], black, 0.004);
-    box(s, black, [0.06, 0.025, 0.023], [0, 0.088, 0.235]);
-    const drum = mesh(new T.CylinderGeometry(0.009, 0.009, 0.038, 20), steel, s, [0, 0.094, 0.25]);
-    drum.rotation.z = Math.PI / 2;
-    for (const x of [-0.072, 0.072]) {
-      const hook = mesh(new T.TorusGeometry(0.008, 0.002, 8, 16, Math.PI * 1.7), red, s, [
-        x,
-        0.064,
-        0.25,
-      ]);
-      hook.rotation.z = 0.4;
-    }
-    // Interior seats, dashboard and steering wheel.
-    for (const x of [-0.047, 0.047]) {
-      rounded([0.038, 0.013, 0.041], [x, 0.16, -0.035], black, 0.006);
-      rounded([0.038, 0.049, 0.01], [x, 0.186, -0.055], black, 0.007);
-      box(s, red, [0.004, 0.043, 0.003], [x - 0.01, 0.186, -0.048]);
-    }
-    box(s, black, [0.18, 0.017, 0.027], [0, 0.182, 0.035]);
-    const steering = mesh(
-      new T.TorusGeometry(0.013, 0.002, 8, 24),
-      black,
-      s,
-      [-0.05, 0.197, 0.018],
+    const batteryLabel = mesh(
+      new T.PlaneGeometry(0.041, 0.055),
+      label('2S / LiPo', '#e1e6d2', '#20343b'),
+      this.battery,
+      [0, 0.0805, -0.119],
     );
-    steering.rotation.x = -0.6;
-    // Roof rack with cross rails, hardware, lightbar and rescue equipment.
-    for (const x of [-0.092, 0.092])
-      for (const y of [0.287, 0.301]) rod(s, black, [x, y, -0.14], [x, y, 0.045], 0.0025);
-    for (const z of [-0.14, 0.045])
-      for (const y of [0.287, 0.301]) rod(s, black, [-0.092, y, z], [0.092, y, z], 0.0025);
-    for (let z = -0.14; z < 0.05; z += 0.025)
-      rod(s, black, [-0.092, 0.282, z], [0.092, 0.282, z], 0.002);
-    box(s, black, [0.163, 0.015, 0.014], [0, 0.281, 0.051]);
-    for (let i = 0; i < 12; i++)
-      box(
-        s,
-        new T.MeshStandardMaterial({ color: '#fff1c2', emissive: '#ffdda0', emissiveIntensity: 1 }),
-        [0.01, 0.008, 0.004],
-        [-0.072 + i * 0.013, 0.283, 0.059],
-      );
-    box(s, metal('#b04927'), [0.065, 0.014, 0.037], [0.039, 0.3, -0.086]);
-    for (let i = 0; i < 9; i++)
-      box(s, black, [0.004, 0.002, 0.027], [0.012 + i * 0.007, 0.308, -0.086]);
-    rounded([0.059, 0.025, 0.05], [-0.037, 0.303, -0.095], metal('#656848'), 0.004);
-    const antenna = rod(s, black, [0.092, 0.16, -0.16], [0.094, 0.32, -0.16], 0.0008);
-    antenna.name = 'antenna';
+    batteryLabel.rotation.x = -Math.PI / 2;
+    box(c, black, [0.028, 0.018, 0.025], [0, 0.045, 0.153]);
+    for (const x of [-0.012, 0.012])
+      for (const z of [0.143, 0.163])
+        mesh(new T.SphereGeometry(0.0015, 6, 4), steel, c, [x, 0.055, z]);
+    buildBody(this.shell, this.paint, this.vehicle);
     // Four genuinely separate wheel assemblies; instanced tread and beadlock hardware.
     for (let i = 0; i < 4; i++) {
       const w = this.createWheel(rubber, steel, black);
@@ -359,6 +200,17 @@ export class Crawler {
         ring.name = 'universal joint';
       }
     }
+    const mats = new Set<T.MeshStandardMaterial>();
+    this.root.traverse((object) => {
+      if (
+        object instanceof T.Mesh &&
+        object.material instanceof T.MeshStandardMaterial &&
+        !object.material.transparent &&
+        object.material.emissiveIntensity <= 1
+      )
+        mats.add(object.material);
+    });
+    for (const material of mats) weatherMaterial(material, this.soilUniforms);
     this.update([0.065, 0.065, 0.065, 0.065], 0, [0, 0, 0, 0]);
   }
   createWheel(rubber: T.Material, steel: T.Material, black: T.Material) {
@@ -380,7 +232,7 @@ export class Crawler {
       new T.Vector2(0.03, 0.022),
       new T.Vector2(0.03, -0.022),
     ];
-    const tyre = mesh(new T.LatheGeometry(profile, 56), rubber, rotation);
+    const tyre = mesh(new T.LatheGeometry(profile, 96), rubber, rotation);
     tyre.rotation.z = Math.PI / 2;
     tyre.customDepthMaterial = deformation.depth;
     const tread = new T.InstancedMesh(new T.BoxGeometry(0.013, 0.006, 0.012), rubber, 40 * 3);
@@ -495,6 +347,15 @@ export class Crawler {
       w.scale.set(sim.tune.tyreWidth / 0.044, sim.tune.radius / 0.059, sim.tune.radius / 0.059);
       const u = this.deformations[i].uniforms,
         state = sim.wheels[i];
+      u.patchCount.value = state.patches.length;
+      u.tyreWidth.value = sim.tune.tyreWidth;
+      u.tyreRadius.value = sim.tune.radius;
+      u.tyreSideFlex.value = state.sideFlex;
+      state.patches.forEach((patch, j) => {
+        u.patchPoints.value[j].copy(patch.point);
+        u.patchNormals.value[j].copy(patch.normal);
+        u.patchDepths.value[j] = patch.depth;
+      });
       u.tyrePoint.value.copy(state.point);
       u.tyreNormal.value.copy(state.normal);
       u.tyreDeflection.value = state.compression;
@@ -532,6 +393,26 @@ export class Crawler {
     );
     this.connect(this.links[10], local(frontEnds[0]), local(frontEnds[1]));
     this.connect(this.links[11], new T.Vector3(-0.05, 0.04, 0.15), local(frontEnds[1]));
+  }
+  dispose() {
+    const geometries = new Set<T.BufferGeometry>(),
+      materials = new Set<T.Material>();
+    this.root.traverse((o) => {
+      if (o instanceof T.SpotLight) o.shadow.dispose();
+      if (o instanceof T.Mesh) {
+        geometries.add(o.geometry);
+        for (const m of Array.isArray(o.material) ? o.material : [o.material]) materials.add(m);
+      }
+    });
+    geometries.forEach((g) => g.dispose());
+    materials.forEach((m) => {
+      for (const value of Object.values(m)) {
+        if (value instanceof T.Texture && !value.userData.sharedPBR) value.dispose();
+      }
+      m.dispose();
+    });
+    this.deformations.forEach((d) => d.depth.dispose());
+    this.root.removeFromParent();
   }
   setTyres(radius: number) {
     this.radius = radius;

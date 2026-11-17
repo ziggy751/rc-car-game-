@@ -1,5 +1,8 @@
 # Runtime architecture
 
+> Historical baseline report. The current two-vehicle, three-band tyre, graphics and environment upgrade is documented in [GRAPHICS_REALISM_UPGRADE.md](GRAPHICS_REALISM_UPGRADE.md).
+
+
 The game retains its existing imperative Three.js renderer and Vite/TypeScript application. The vehicle no longer uses Rapier's raycast controller.
 
 - `src/physics.ts`: constrained multi-body assembly, steering joint actuation, electric motor/drivetrain torques, shock forces, contact telemetry and pose snapshots.

@@ -1,0 +1,612 @@
+/* Distinct application spaces; driving owns the whole view. */
+#driving-hud {
+  display: none;
+}
+body:not([data-mode='trail']) .telemetry,
+body:not([data-mode='trail']) .location,
+body:not([data-mode='trail']) footer > .controls {
+  display: none;
+}
+body[data-mode='home'] > #app footer,
+body[data-mode='menu'] footer,
+body[data-mode='map'] footer,
+body[data-mode='settings'] footer {
+  display: none;
+}
+body[data-playing='true'] header,
+body[data-playing='true'] .location,
+body[data-playing='true'] #panel,
+body[data-playing='true'] footer,
+body[data-playing='true'] .telemetry,
+body[data-playing='true'] .vehicle-tag,
+body[data-playing='true'] #center-hint {
+  display: none;
+}
+body[data-playing='true'] .vignette {
+  background: linear-gradient(0deg, #10201855, transparent 15%);
+  backdrop-filter: none;
+}
+body[data-playing='true'] #driving-hud {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 22px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  pointer-events: none;
+  text-shadow: 0 1px 5px #0009;
+  font-size: 9px;
+}
+.hud-speed {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.hud-speed b {
+  font:
+    400 30px Manrope,
+    sans-serif;
+  letter-spacing: -1px;
+}
+.hud-speed small {
+  font-size: 8px;
+  color: #c9d1be;
+}
+.hud-chip {
+  padding: 7px 9px;
+  background: #17281c99;
+  border: 1px solid #cdd5b433;
+  border-radius: 4px;
+  letter-spacing: 0.6px;
+  font-size: 8px;
+}
+.hud-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+.hud-actions button {
+  padding: 9px 11px;
+  background: #17281ca8;
+  border: 1px solid #cdd5b433;
+  border-radius: 4px;
+  font-size: 8px;
+}
+#hud-course {
+  font-size: 9px;
+  color: #dfd6b0;
+  letter-spacing: 0.6px;
+}
+body.hide-hud #driving-hud {
+  display: none;
+}
+body.photo #driving-hud {
+  display: none;
+}
+#hud-fps {
+  font-size: 7px;
+  color: #d8dfc7;
+}
+.main-menu {
+  position: absolute;
+  left: 6%;
+  top: 23%;
+  width: 345px;
+  pointer-events: auto;
+}
+.main-menu h1 {
+  font-size: 50px;
+  line-height: 1.06;
+  margin: 20px 0;
+}
+.main-menu h1 em {
+  font-size: 54px;
+}
+.main-menu > p {
+  font-size: 12px;
+  color: #bdc8b2;
+  line-height: 1.9;
+  max-width: 290px;
+  margin-bottom: 27px;
+}
+.main-actions {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #ffffff22;
+}
+.main-actions button {
+  padding: 16px 4px;
+  border-bottom: 1px solid #ffffff22;
+  text-align: left;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.main-actions .primary {
+  padding: 16px;
+  color: #263124;
+  border: 0;
+  margin: 12px 0;
+}
+.main-actions button span {
+  font-size: 10px;
+  color: #b4bba3;
+}
+.main-menu > small {
+  display: block;
+  margin-top: 21px;
+  font-size: 8px;
+  color: #afbaa1;
+  letter-spacing: 1px;
+}
+.pause-menu {
+  left: 50%;
+  top: 18%;
+  transform: translateX(-50%);
+  width: 360px;
+  padding: 28px;
+  background: #1b2a21ed;
+  border: 1px solid #aab59a44;
+  border-radius: 5px;
+}
+.pause-menu h1 {
+  font-size: 35px;
+}
+.pause-menu > p {
+  font-size: 10px;
+  margin-bottom: 16px;
+}
+body[data-mode='menu'] header {
+  display: none;
+}
+body[data-mode='menu'] .vignette {
+  background: #0c1a13bb;
+  backdrop-filter: blur(5px);
+}
+.selection-panel {
+  position: absolute;
+  left: 3.6%;
+  top: 157px;
+  bottom: 70px;
+  width: 320px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #778564 #263328;
+  padding-right: 5px;
+}
+.selection-panel h1 {
+  font-size: 34px;
+  margin: 12px 0;
+}
+.selection-panel > .intro {
+  font-size: 10px;
+  margin-bottom: 18px;
+}
+.vehicle-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.vehicle-cards button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: #1d2c24e8;
+  border: 1px solid #b6c0a133;
+  border-radius: 4px;
+  text-align: left;
+}
+.vehicle-cards button.selected {
+  border-color: #dfc681;
+}
+.paint-dot {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  box-shadow: inset -5px -5px 8px #0005;
+}
+.vehicle-cards small {
+  display: block;
+  font-size: 6px;
+  letter-spacing: 1.4px;
+  color: #bdc7aa;
+}
+.vehicle-cards b {
+  display: block;
+  font:
+    500 17px Manrope,
+    sans-serif;
+  margin: 5px 0;
+}
+.vehicle-cards div > span {
+  font-size: 7px;
+  color: #99ab93;
+  letter-spacing: 0.8px;
+}
+.vehicle-info {
+  padding: 20px;
+  background: #1a2922ed;
+  border: 1px solid #b6c0a133;
+  border-radius: 4px;
+  margin-top: 13px;
+}
+.vehicle-info > small {
+  font-size: 7px;
+  letter-spacing: 1px;
+  color: #cabd92;
+}
+.vehicle-info h2 {
+  font-size: 24px;
+}
+.vehicle-info p {
+  font-size: 9px;
+  line-height: 1.8;
+  color: #b2bea5;
+}
+.vehicle-info dl {
+  margin: 18px 0;
+}
+.vehicle-info dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid #ffffff16;
+  font-size: 8px;
+}
+.vehicle-info dt {
+  color: #9fad95;
+}
+.vehicle-info dd {
+  margin: 0;
+  text-align: right;
+  color: #dbe0cb;
+}
+.vehicle-info .comparison {
+  font-size: 8px;
+  color: #b8bea3;
+}
+.vehicle-info button.secondary {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+.vehicle-info button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.vehicle-info .swatches {
+  gap: 10px;
+}
+.swatches button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.tune-categories {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin-bottom: 15px;
+}
+.tune-categories button {
+  font-size: 8px;
+  padding: 8px 2px;
+  border: 1px solid #ffffff22;
+  border-radius: 2px;
+  color: #adbaa1;
+}
+.tune-categories button.active {
+  border-color: #d1bd7b77;
+  color: #e9ce8e;
+  background: #d1bd7b0b;
+}
+.preview-poses {
+  display: flex;
+  gap: 7px;
+  justify-content: flex-end;
+}
+.preview-poses button {
+  font-size: 8px;
+  padding: 8px 10px;
+  border: 1px solid #d5c78c55;
+  background: #213023cc;
+  border-radius: 3px;
+}
+.workshop-panel {
+  top: 156px;
+  bottom: 65px;
+}
+.workshop-card {
+  backdrop-filter: blur(12px);
+}
+.inspection-note {
+  bottom: 17%;
+}
+.course-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+.course-tile {
+  padding: 20px;
+  text-align: left;
+  border: 1px solid #a3b39633;
+  border-left: 3px solid var(--course);
+  background: #1b2b22ed;
+  border-radius: 4px;
+}
+.course-tile.selected {
+  outline: 1px solid var(--course);
+  outline-offset: 2px;
+}
+.course-tile small {
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  color: var(--course);
+}
+.course-tile h2 {
+  font-size: 23px;
+  margin: 10px 0;
+}
+.course-tile p {
+  font-size: 10px;
+  line-height: 1.8;
+  color: #aebca1;
+  min-height: 38px;
+}
+.course-tile > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  gap: 12px;
+}
+.course-tile > div > span {
+  color: #aebca1;
+}
+.course-tile > div > b {
+  color: var(--course);
+  font-weight: 400;
+}
+.course-tile footer {
+  position: static;
+  display: block;
+  font-size: 7px;
+  letter-spacing: 0.5px;
+  color: #899d83;
+  margin-top: 14px;
+}
+.course-actions {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0 12px;
+  align-items: center;
+}
+.course-actions .primary {
+  width: 310px;
+}
+.course-actions .secondary {
+  width: 220px;
+  margin: 0;
+  padding: 14px;
+}
+.map-panel {
+  top: 160px;
+  max-height: calc(100vh - 190px);
+  overflow: auto;
+  scrollbar-width: thin;
+  padding: 5px 8px;
+}
+.map-panel .test-stations {
+  max-width: 543px;
+}
+.graphics-menu {
+  width: 460px;
+  top: 16%;
+  max-height: 75%;
+}
+.graphics-menu > h1 {
+  font-size: 30px;
+}
+.graphics-menu input[type='range'] {
+  margin-bottom: 23px;
+}
+@media (max-height: 790px) {
+  .main-menu {
+    top: 20%;
+  }
+  .main-menu h1 {
+    font-size: 38px;
+  }
+  .main-menu h1 em {
+    font-size: 43px;
+  }
+  .main-menu > p {
+    font-size: 10px;
+    margin-bottom: 16px;
+  }
+  .main-actions button {
+    padding: 12px 4px;
+  }
+  .selection-panel,
+  .workshop-panel {
+    top: 130px;
+  }
+  .map-panel {
+    top: 125px;
+    max-height: calc(100vh - 145px);
+  }
+  .map-panel h1 {
+    font-size: 29px;
+  }
+  .course-tile {
+    padding: 14px;
+  }
+  .course-tile h2 {
+    font-size: 20px;
+  }
+  .course-tile p {
+    font-size: 9px;
+    margin: 8px 0;
+  }
+  .pause-menu {
+    top: 10%;
+    max-height: 80%;
+    overflow: auto;
+  }
+}
+@media (max-width: 700px) {
+  header .header-tools {
+    display: none;
+  }
+  header nav {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    gap: 10px;
+  }
+  header nav button {
+    flex-shrink: 0;
+    font-size: 9px;
+  }
+  .main-menu {
+    left: 6%;
+    top: 22%;
+    width: 245px;
+  }
+  .main-menu h1 {
+    font-size: 36px;
+  }
+  .main-menu h1 em {
+    font-size: 40px;
+  }
+  .main-menu > p {
+    font-size: 10px;
+  }
+  .main-actions button {
+    font-size: 11px;
+    padding: 14px 3px;
+  }
+  .main-menu > small {
+    font-size: 7px;
+  }
+  .selection-panel {
+    top: 117px;
+    width: 245px;
+    bottom: 65px;
+  }
+  .selection-panel h1 {
+    font-size: 27px;
+  }
+  .vehicle-cards button {
+    padding: 11px;
+  }
+  .vehicle-cards b {
+    font-size: 15px;
+  }
+  .vehicle-info {
+    padding: 15px;
+  }
+  .vehicle-info p {
+    font-size: 8px;
+  }
+  .vehicle-info h2 {
+    font-size: 21px;
+  }
+  .workshop-panel {
+    top: 117px;
+    width: 260px;
+  }
+  .workshop-panel h1 {
+    font-size: 26px;
+  }
+  .tune-categories button {
+    font-size: 7px;
+    padding: 6px;
+  }
+  .inspection-note {
+    display: none;
+  }
+  .course-grid {
+    grid-template-columns: 1fr;
+  }
+  .course-tile p {
+    min-height: 0;
+  }
+  .course-actions {
+    display: block;
+  }
+  .course-actions .primary,
+  .course-actions .secondary {
+    width: 100%;
+    margin-bottom: 9px;
+  }
+  .map-panel {
+    top: 115px;
+    max-height: calc(100vh - 130px);
+  }
+  .map-panel h1 {
+    font-size: 26px;
+  }
+  .map-panel .intro {
+    font-size: 9px;
+  }
+  .graphics-menu {
+    width: 92%;
+    top: 13%;
+    max-height: 80%;
+  }
+  .pause-menu {
+    left: 50%;
+    width: 90%;
+    top: 12%;
+    max-height: 76%;
+    overflow: auto;
+  }
+  .pause-menu h1 {
+    font-size: 30px;
+  }
+  body[data-playing='true'] #driving-hud {
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
+    gap: 7px;
+  }
+  .hud-speed b {
+    font-size: 24px;
+  }
+  .hud-chip {
+    font-size: 7px;
+    padding: 7px;
+  }
+  .hud-actions button {
+    font-size: 7px;
+    padding: 8px;
+  }
+  .hud-actions button#hud-camera,
+  .hud-actions button#hud-photo {
+    display: none;
+  }
+  #hud-course {
+    position: absolute;
+    bottom: 48px;
+    font-size: 8px;
+  }
+  .hud-speed small {
+    font-size: 7px;
+  }
+  #hud-mode {
+    display: none;
+  }
+  #touch {
+    bottom: 110px;
+    right: 12px;
+  }
+  body:not([data-playing='true']) #touch {
+    display: none;
+  }
+}

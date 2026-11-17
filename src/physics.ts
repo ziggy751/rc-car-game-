@@ -1,5 +1,6 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import { Quaternion, Vector3 } from 'three';
+import { vehicleSpec } from './catalogue';
 import { defaults, type Tune } from './dynamics/tuning';
 import { v, q, point, clamp, approach, exponential, ackermann } from './dynamics/math';
 import { surfaces, type Surface, type SurfaceQuery } from './dynamics/surfaces';
@@ -21,7 +22,18 @@ export type Link = {
   bottom: Vector3;
   length: number;
 };
+export type TyrePatch = { point: Vector3; normal: Vector3; depth: number; load: number };
+export type ContactRib = {
+  collider: RAPIER.Collider;
+  load: number;
+  compression: number;
+  x: number;
+};
 export type WheelState = {
+  ribs: ContactRib[];
+  patches: TyrePatch[];
+  sideFlex: number;
+  lateralForce: number;
   body: RAPIER.RigidBody;
   carrier: RAPIER.RigidBody;
   collider: RAPIER.Collider;
@@ -72,6 +84,7 @@ export class Simulation {
   current!: VehiclePose;
   last = new Vector3();
   axleColliders: RAPIER.Collider[] = [];
+  events = new RAPIER.EventQueue(true);
   private surfaceQuery: SurfaceQuery;
   private height: (x: number, z: number) => number;
   constructor(
@@ -191,7 +204,7 @@ export class Simulation {
         }
         const wheel = this.rigid(new Vector3(side * 0.128, 0.059, z));
         const collider = this.world.createCollider(
-          RAPIER.ColliderDesc.cylinder(tune.tyreWidth / 2, tune.radius)
+          RAPIER.ColliderDesc.cylinder(tune.tyreWidth / 2, tune.radius - 0.012)
             .setRotation(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2))
             .setMass(0.13 + tune.wheelWeight)
             .setCollisionGroups(VEHICLE)
@@ -201,6 +214,25 @@ export class Simulation {
             .setContactSkin(0.0003),
           wheel,
         );
+        const ribs: ContactRib[] = [];
+        for (let rib = 0; rib < 3; rib++) {
+          const x = ((rib - 1) * tune.tyreWidth) / 3;
+          const shape = this.world.createCollider(
+            RAPIER.ColliderDesc.cylinder(tune.tyreWidth / 6, tune.radius)
+              .setRotation(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2))
+              .setTranslation(x, 0, 0)
+              .setMass(0)
+              .setCollisionGroups(VEHICLE)
+              .setFriction(1)
+              .setFrictionCombineRule(RAPIER.CoefficientCombineRule.Multiply)
+              .setRestitution(0)
+              .setContactSkin(0.0002)
+              .setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS)
+              .setContactForceEventThreshold(0),
+            wheel,
+          );
+          ribs.push({ collider: shape, x, load: 0, compression: 0 });
+        }
         this.joint(
           RAPIER.JointData.revolute({ x: side * (a === 0 ? 0.023 : 0.128), y: 0, z: 0 }, ZERO, {
             x: 1,
@@ -214,6 +246,10 @@ export class Simulation {
           body: wheel,
           carrier,
           collider,
+          ribs,
+          patches: [],
+          sideFlex: 0,
+          lateralForce: 0,
           contact: false,
           normal: new Vector3(0, 1, 0),
           point: new Vector3(),
@@ -282,6 +318,17 @@ export class Simulation {
   }
   applyTune() {
     if (!this.wheels.length) return;
+    const spec = vehicleSpec(this.tune.vehicle);
+    this.bodyColliders[0].setMass(spec.chassisMass);
+    this.bodyColliders[1].setMass(spec.bodyMass);
+    this.bodyColliders[1].setTranslationWrtParent({ x: 0, y: spec.bodyHeight, z: -0.035 });
+    this.bodyColliders[1].setShape(
+      new RAPIER.Cuboid(
+        this.tune.vehicle === 'c2' ? 0.065 : 0.094,
+        this.tune.vehicle === 'c2' ? 0.035 : 0.04,
+        0.1,
+      ),
+    );
     this.bodyColliders[3].setTranslationWrtParent({
       x: 0,
       y: this.tune.batteryHeight,
@@ -297,10 +344,26 @@ export class Simulation {
       });
     this.axles.forEach((a) => a.recomputeMassPropertiesFromColliders());
     for (const w of this.wheels) {
-      w.collider.setShape(
-        new RAPIER.Cylinder(this.tune.tyreWidth / 2, this.tune.radius - w.compression),
+      w.collider.setShape(new RAPIER.Cylinder(this.tune.tyreWidth / 2, this.tune.radius - 0.012));
+      const m = 0.13 + this.tune.wheelWeight,
+        R = this.tune.radius,
+        width = this.tune.tyreWidth,
+        spin = 0.5 * m * R * R,
+        transverse = (m * (3 * R * R + width * width)) / 12;
+      w.collider.setMassProperties(
+        m,
+        ZERO,
+        { x: transverse, y: spin, z: transverse },
+        { x: 0, y: 0, z: 0, w: 1 },
       );
-      w.collider.setMass(0.13 + this.tune.wheelWeight);
+      w.ribs.forEach((rib, index) => {
+        rib.x = ((index - 1) * this.tune.tyreWidth) / 3;
+        rib.collider.setTranslationWrtParent({ x: rib.x + w.sideFlex, y: 0, z: 0 });
+        rib.collider.setShape(
+          new RAPIER.Cylinder(this.tune.tyreWidth / 6, this.tune.radius - rib.compression),
+        );
+        rib.collider.setMass(0);
+      });
       w.body.recomputeMassPropertiesFromColliders();
     }
   }
@@ -335,6 +398,12 @@ export class Simulation {
         w.carrier.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
       }
       w.compression = 0;
+      w.sideFlex = 0;
+      w.patches = [];
+      w.ribs.forEach((r) => {
+        r.compression = 0;
+        r.load = 0;
+      });
       w.load = 0;
       w.contact = false;
       w.omega = 0;
@@ -375,9 +444,10 @@ export class Simulation {
     carrier.applyTorqueImpulse(impulse.negate(), true);
   }
   private springForces(dt: number) {
-    const k = this.tune.spring * 8,
-      rest = this.tune.ride + 0.035 + this.tune.preload;
-    for (const s of this.springs) {
+    const rest = this.tune.ride + 0.035 + this.tune.preload;
+    for (const [index, s] of this.springs.entries()) {
+      const k = (index < 2 ? this.tune.spring : this.tune.rearSpring) * 8,
+        travel = index < 2 ? this.tune.travel : this.tune.rearTravel;
       const top = point(this.body, s.top),
         bottom = point(s.axle, s.bottom),
         delta = top.clone().sub(bottom),
@@ -386,9 +456,12 @@ export class Simulation {
       const rate = v(this.body.velocityAtPoint(top))
         .sub(v(s.axle.velocityAtPoint(bottom)))
         .dot(axis);
-      const bump = Math.max(0, 0.054 - length) * 5000;
+      const bump = Math.max(0, 0.125 - travel - length) * 5000;
       const droop = Math.max(0, length - 0.119) * 4000;
-      const damping = this.tune.damping * (rate > 0 ? 3.5 : 2.7);
+      const damping =
+        rate > 0
+          ? this.tune.rebound
+          : (index < 2 ? this.tune.damping : this.tune.rearDamping) * 2.7;
       const force = clamp(
         Math.max(0, (rest - length) * k) - damping * rate + bump - droop,
         -90,
@@ -504,8 +577,8 @@ export class Simulation {
     });
   }
   private readContacts(dt: number) {
-    for (const w of this.wheels) {
-      if (this.wheels.indexOf(w) < 2) {
+    for (const [index, w] of this.wheels.entries()) {
+      if (index < 2) {
         const relative = q(this.axles[0].rotation()).invert().multiply(q(w.carrier.rotation()));
         w.steering = Math.atan2(
           2 * (relative.w * relative.y + relative.x * relative.z),
@@ -513,36 +586,65 @@ export class Simulation {
         );
       }
       w.contact = false;
-      let load = 0;
+      w.patches = [];
+      let load = 0,
+        best = -1;
       const centre = v(w.body.translation());
-      let best = 0;
-      this.world.contactPairsWith(w.collider, (other) => {
-        if (other.parent() && this.parts.includes(other.parent()!)) return;
-        this.world.contactPair(w.collider, other, (m) => {
-          for (let i = 0; i < m.numContacts(); i++) load += m.contactImpulse(i) / dt;
-          for (let i = 0; i < m.numSolverContacts(); i++)
-            if (m.solverContactDist(i) < 0.002) {
-              w.contact = true;
-              const p = v(m.solverContactPoint(i)),
-                normal = v(m.normal());
-              if (centre.clone().sub(p).dot(normal) < 0) normal.negate();
-              if (normal.y >= best) {
-                best = normal.y;
-                w.point.copy(p);
-                w.normal.copy(normal);
-                w.surface = this.surfaceQuery(p, other);
+      const softness =
+        this.tune.compound === 'soft' ? 1 : this.tune.compound === 'trail' ? 1.25 : 1.6;
+      for (const rib of w.ribs) {
+        let ribLoad = 0;
+        const found: TyrePatch[] = [];
+        this.world.contactPairsWith(rib.collider, (other) => {
+          if (other.parent() && this.parts.some((p) => p.handle === other.parent()!.handle)) return;
+          this.world.contactPair(rib.collider, other, (m) => {
+            for (let i = 0; i < m.numContacts(); i++) ribLoad += m.contactImpulse(i) / dt;
+            for (let i = 0; i < Math.min(2, m.numSolverContacts()); i++)
+              if (m.solverContactDist(i) < 0.002) {
+                const p = v(m.solverContactPoint(i)),
+                  n = v(m.normal());
+                if (centre.clone().sub(p).dot(n) < 0) n.negate();
+                found.push({ point: p, normal: n, depth: rib.compression, load: ribLoad });
+                w.contact = true;
+                if (n.y > best) {
+                  best = n.y;
+                  w.point.copy(p);
+                  w.normal.copy(n);
+                  w.surface = this.surfaceQuery(p, other);
+                }
               }
-            }
+          });
         });
-      });
-      w.load = approach(w.load, Math.min(150, load), 700, dt);
+        rib.load = approach(rib.load, Math.min(100, ribLoad), 500, dt);
+        load += rib.load;
+        const target = found.length
+          ? clamp(rib.load / ((this.tune.foam * softness) / 3), 0, 0.012)
+          : 0;
+        const compression = rib.compression + (target - rib.compression) * (1 - Math.exp(-dt * 14));
+        if (Math.abs(compression - rib.compression) > 0.00004) {
+          rib.compression = compression;
+          rib.collider.setShape(
+            new RAPIER.Cylinder(this.tune.tyreWidth / 6, this.tune.radius - compression),
+          );
+          rib.collider.setMass(0);
+        }
+        for (const patch of found) {
+          patch.depth = rib.compression;
+          w.patches.push(patch);
+        }
+      }
+      w.load = load;
+      w.compression = Math.max(...w.ribs.map((r) => r.compression));
+      w.patches = w.patches.slice(0, 6);
       const compound =
-        this.tune.compound === 'soft' ? 1.08 : this.tune.compound === 'trail' ? 0.93 : 0.76;
-      const sensitivity = clamp(Math.max(1, w.load) / 8, -1, 12) ** -0.065;
-      w.collider.setFriction(w.surface.mu * compound * sensitivity);
+          this.tune.compound === 'soft' ? 1.08 : this.tune.compound === 'trail' ? 0.93 : 0.76,
+        sensitivity = clamp(Math.max(1, w.load) / 8, 0.1, 12) ** -0.065;
+      const mu = w.surface.mu * compound * sensitivity;
+      w.collider.setFriction(mu);
+      w.ribs.forEach((r) => r.collider.setFriction(mu));
       const axis = new Vector3(1, 0, 0).applyQuaternion(q(w.carrier.rotation())),
-        forward = axis.clone().cross(w.normal).normalize();
-      const speed = v(w.body.linvel()).dot(forward),
+        forward = axis.clone().cross(w.normal).normalize(),
+        speed = v(w.body.linvel()).dot(forward),
         contactVelocity = v(w.body.velocityAtPoint(w.point));
       w.omega = v(w.body.angvel()).sub(v(w.carrier.angvel())).dot(axis);
       w.slip = w.contact
@@ -550,17 +652,11 @@ export class Simulation {
           Math.max(0.06, Math.abs(speed), Math.abs(w.omega * this.tune.radius))
         : 0;
       w.lateralSlip = w.contact ? contactVelocity.dot(axis) : 0;
-      const softness =
-        this.tune.compound === 'soft' ? 1 : this.tune.compound === 'trail' ? 1.25 : 1.6;
-      const deflection = w.contact ? clamp(w.load / (this.tune.foam * softness), 0, 0.006) : 0;
-      const compressed = w.compression + (deflection - w.compression) * (1 - Math.exp(-dt * 16));
-      if (Math.abs(compressed - w.compression) > 0.00003) {
-        w.compression = compressed;
-        w.collider.setShape(
-          new RAPIER.Cylinder(this.tune.tyreWidth / 2, this.tune.radius - compressed),
-        );
-        w.collider.setMass(0.13 + this.tune.wheelWeight);
-      }
+      const targetFlex = clamp(w.lateralForce / this.tune.sidewall, -0.006, 0.006);
+      w.sideFlex += (targetFlex - w.sideFlex) * (1 - Math.exp(-dt * 10));
+      w.ribs.forEach((r) =>
+        r.collider.setTranslationWrtParent({ x: r.x + w.sideFlex, y: 0, z: 0 }),
+      );
     }
     this.contacts = this.wheels.filter((w) => w.contact).length;
     this.surface = this.wheels.find((w) => w.contact)?.surface.name ?? 'Airborne';
@@ -573,7 +669,23 @@ export class Simulation {
     this.driveline(dt, input);
     this.springForces(dt);
     this.world.timestep = dt;
-    this.world.step();
+    this.world.step(this.events);
+    this.wheels.forEach((w) => (w.lateralForce = 0));
+    this.events.drainContactForceEvents((event) => {
+      for (const w of this.wheels) {
+        if (
+          !w.ribs.some(
+            (r) =>
+              r.collider.handle === event.collider1() || r.collider.handle === event.collider2(),
+          )
+        )
+          continue;
+        const force = v(event.totalForce());
+        if (force.dot(w.normal) < 0) force.negate();
+        const axis = new Vector3(1, 0, 0).applyQuaternion(q(w.carrier.rotation()));
+        w.lateralForce += force.dot(axis);
+      }
+    });
     this.readContacts(dt);
     this.current = this.snapshot();
     this.elapsed += dt;
@@ -607,6 +719,10 @@ export class Simulation {
       axles: this.current.axles.map((b, i) => mix(this.previous.axles[i], b)),
     };
   }
+  dispose() {
+    this.events.free();
+    for (const body of this.parts) if (body.isValid()) this.world.removeRigidBody(body);
+  }
   debug() {
     return {
       mass: this.mass,
@@ -629,6 +745,9 @@ export class Simulation {
         lateralSlip: w.lateralSlip,
         compression: w.compression * 1000,
         shock: this.springs[i]?.length * 1000,
+        sideFlex: w.sideFlex * 1000,
+        ribDeflections: w.ribs.map((r) => r.compression * 1000),
+        patches: w.patches.length,
       })),
     };
   }

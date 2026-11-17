@@ -1,5 +1,9 @@
 import * as T from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
+import { surfaceMaterial, terrainMaterial } from './material-library';
+import { bendVegetation } from './environment-effects';
+import { courses } from './courses';
+import { courseRocks, courseDistance, buildCourseMarkers } from './course-terrain';
 import { surfaces, type Surface } from './dynamics/surfaces';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { box, mesh, metal, rod, tube, label, noiseTexture } from './materials';
@@ -19,39 +23,24 @@ export function groundHeight(x: number, z: number) {
   const blend = T.MathUtils.smoothstep(Math.hypot(x, z), 0.35, 0.75);
   return (ridge + detail + hill + creek) * blend;
 }
-export const trails = [
-  {
-    name: 'Fern Creek',
-    type: 'FOREST TRAIL',
-    grade: 'Moderate',
-    distance: '24 m',
-    x: 0,
-    z: 0,
-    description:
-      'Follow the creek upstream. Find your line through roots, granite and shallow water.',
-  },
-  {
-    name: 'Granite Spine',
-    type: 'TECHNICAL ASCENT',
-    grade: 'Advanced',
-    distance: '18 m',
-    x: -2,
-    z: 5,
-    description:
-      'Off-camber granite, tall ledges and exposed lines. Slow inputs and soft tyres recommended.',
-  },
-  {
-    name: 'The Timberline',
-    type: 'PRECISION COURSE',
-    grade: 'Moderate',
-    distance: '16 m',
-    x: 0.65,
-    z: 2.8,
-    description:
-      'Cross the timber bridge, then thread the gates. Momentum is less useful than precision.',
-  },
-];
+export function creekWaterHeight() {
+  return Math.min(groundHeight(0, 3.7), groundHeight(0.65, 3.7)) + 0.085;
+}
+export function bridgeDeckHeight(z: number) {
+  const t = T.MathUtils.clamp((z - 3.08) / (22 * 0.055), 0, 1);
+  return (
+    T.MathUtils.lerp(groundHeight(0.65, 3.08), groundHeight(0.65, 4.29), t) +
+    0.035 +
+    Math.sin(t * Math.PI) * 0.025
+  );
+}
+export const trails = courses;
 export class Park {
+  sunOffset = new T.Vector3(-10, 16, -8);
+  terrainWet = { value: 0 };
+  plantUniforms: ReturnType<typeof bendVegetation> | null = null;
+  sky: Sky;
+  hemisphere: T.HemisphereLight;
   materialSurfaces = new Map<number, Surface>();
   group = new T.Group();
   garage = new T.Group();
@@ -63,31 +52,11 @@ export class Park {
     public scene: T.Scene,
     public physics: RAPIER.World,
   ) {
-    const groundTex = noiseTexture('ground', 512);
-    groundTex.repeat.set(70, 70);
-    const rockTex = noiseTexture('rock', 512);
-    rockTex.repeat.set(2, 2);
-    const rockMat = new T.MeshStandardMaterial({
-      color: '#8e8a77',
-      map: rockTex,
-      bumpMap: rockTex,
-      bumpScale: 0.007,
-      roughness: 0.98,
-    });
-    const moss = new T.MeshStandardMaterial({
-      color: '#414e2a',
-      roughness: 1,
-      map: rockTex,
-      bumpMap: rockTex,
-      bumpScale: 0.008,
-    });
-    const groundMat = new T.MeshStandardMaterial({
-      map: groundTex,
-      vertexColors: true,
-      bumpMap: groundTex,
-      bumpScale: 0.005,
-      roughness: 1,
-    });
+    const rockMat = surfaceMaterial('rock'),
+      moss = surfaceMaterial('moss');
+    const terrain = terrainMaterial(),
+      groundMat = terrain.material;
+    this.terrainWet = terrain.uniforms.groundWet;
     const geo = new T.PlaneGeometry(40, 40, 240, 240);
     geo.rotateX(-Math.PI / 2);
     const positions = geo.attributes.position;
@@ -97,7 +66,7 @@ export class Park {
         z = positions.getZ(i),
         y = groundHeight(x, z);
       positions.setY(i, y);
-      const d = Math.abs(x - trailX(z));
+      const d = courseDistance(x, z);
       const color = new T.Color(d < 0.52 ? '#ae9672' : d < 0.85 ? '#6b7048' : '#53613b');
       if (Math.abs(z - 3.7) < 0.35) color.set('#635547');
       color.multiplyScalar(0.85 + 0.15 * Math.sin(x * 17 + z * 8));
@@ -108,18 +77,7 @@ export class Park {
     mesh(geo, groundMat, this.group);
     this.collider(geo);
     // Authored granite steps: purposeful lines, with lower shoulders for alternate routes.
-    const rocks = [
-      [-0.24, 0.9, 0.19, 0.12, 0.24],
-      [0.22, 1.23, 0.21, 0.14, 0.22],
-      [-0.19, 1.58, 0.22, 0.16, 0.22],
-      [0.39, 1.98, 0.25, 0.18, 0.22],
-      [-0.05, 2.15, 0.19, 0.13, 0.3],
-      [-2.2, 5, 0.4, 0.27, 0.6],
-      [-2, 5.6, 0.5, 0.35, 0.6],
-      [-2.4, 6.2, 0.5, 0.4, 0.65],
-      [-1.9, 6.9, 0.5, 0.43, 0.65],
-      [-1.5, 7.7, 0.5, 0.32, 0.7],
-    ];
+    const rocks = courseRocks;
     let seed = 87;
     const rand = () => {
       seed = (1664525 * seed + 1013904223) >>> 0;
@@ -157,7 +115,7 @@ export class Park {
     for (let i = 0; i < 125; i++) {
       const x = (rand() - 0.5) * 26,
         z = (rand() - 0.2) * 27;
-      if (Math.abs(x - trailX(z)) < 0.75 && z < 10) continue;
+      if (courseDistance(x, z) < 0.65) continue;
       makeRock(
         x,
         z,
@@ -181,7 +139,7 @@ export class Park {
     });
     this.water = mesh(new T.PlaneGeometry(25, 0.78, 80, 8), waterMat, this.group, [
       0,
-      groundHeight(0, 3.7) + 0.13,
+      creekWaterHeight(),
       3.7,
     ]);
     this.water.rotation.x = -Math.PI / 2;
@@ -192,7 +150,7 @@ export class Park {
     const iron = metal('#292f29', 0.7, 0.65);
     for (let i = 0; i < 23; i++) {
       const z = 3.08 + i * 0.055;
-      const y = 0.11 + Math.sin((i / 22) * Math.PI) * 0.07;
+      const y = bridgeDeckHeight(z);
       const plank = box(this.group, wood, [0.51, 0.022, 0.05], [0.65, y, z]);
       const g = plank.geometry.clone();
       plank.updateMatrix();
@@ -207,36 +165,36 @@ export class Park {
         this.group,
         wood,
         [
-          [x, 0.12, 3.04],
-          [x, 0.18, 3.7],
-          [x, 0.12, 4.35],
+          [x, bridgeDeckHeight(3.04) - 0.015, 3.04],
+          [x, bridgeDeckHeight(3.7) - 0.015, 3.7],
+          [x, bridgeDeckHeight(4.35) - 0.015, 4.35],
         ],
         0.019,
       );
-      for (const z of [3.1, 3.7, 4.3]) rod(this.group, wood, [x, 0.06, z], [x, 0.37, z], 0.014);
+      for (const z of [3.1, 3.7, 4.3])
+        rod(
+          this.group,
+          wood,
+          [x, groundHeight(x, z) - 0.01, z],
+          [x, bridgeDeckHeight(z) + 0.11, z],
+          0.006,
+        );
       tube(
         this.group,
         iron,
         [
-          [x, 0.36, 3.1],
-          [x, 0.33, 3.4],
-          [x, 0.36, 3.7],
-          [x, 0.33, 4],
-          [x, 0.36, 4.3],
+          [x, bridgeDeckHeight(3.1) + 0.1, 3.1],
+          [x, bridgeDeckHeight(3.4) + 0.08, 3.4],
+          [x, bridgeDeckHeight(3.7) + 0.1, 3.7],
+          [x, bridgeDeckHeight(4) + 0.08, 4],
+          [x, bridgeDeckHeight(4.3) + 0.1, 4.3],
         ],
         0.004,
       );
     }
     // Forest canopy: branching trunks and needle-bearing boughs instanced into one draw call.
-    const barkTex = noiseTexture('bark');
-    barkTex.repeat.set(3, 7);
-    const bark = new T.MeshStandardMaterial({
-      color: '#6d614b',
-      map: barkTex,
-      bumpMap: barkTex,
-      bumpScale: 0.015,
-      roughness: 1,
-    });
+    const bark = surfaceMaterial('bark');
+    for (const texture of [bark.map, bark.normalMap, bark.roughnessMap]) texture!.repeat.set(3, 7);
     const leafMaterial = new T.MeshStandardMaterial({
       color: '#acbe9c',
       roughness: 1,
@@ -270,11 +228,7 @@ export class Park {
     for (let i = 0; i < 110; i++) {
       const x = (rand() - 0.5) * 33,
         z = (rand() - 0.5) * 38;
-      if (
-        (Math.abs(x - trailX(z)) < 1.15 && z < 12) ||
-        (x > 5.5 && x < 16.5 && z > -13.5 && z < -0.5)
-      )
-        continue;
+      if (courseDistance(x, z) < 0.85 || (x > 5.5 && x < 16.5 && z > -13.5 && z < -0.5)) continue;
       const y = groundHeight(x, z),
         h = 2.3 + rand() * 3.5,
         r = 0.055 + rand() * 0.055;
@@ -375,6 +329,8 @@ export class Park {
       dummy.updateMatrix();
       ferns.setMatrixAt(i, dummy.matrix);
     }
+    ferns.name = 'interactive-ferns';
+    this.plantUniforms = bendVegetation(ferns.material as T.MeshStandardMaterial);
     this.vegetation.add(ferns);
     this.group.add(this.vegetation);
     // Fallen log and root obstacle with collision.
@@ -387,21 +343,7 @@ export class Park {
     );
     log.updateMatrix();
     this.collider(log.geometry.clone().applyMatrix4(log.matrix));
-    for (let j = 0; j < 4; j++) {
-      const z = 0.8 + j * 2.05;
-      for (const side of [-1, 1]) {
-        const x = trailX(z) + side * 0.38;
-        const y = groundHeight(x, z);
-        rod(this.group, metal('#d9b75e', 0.6, 0), [x, y, z], [x, y + 0.15, z], 0.003);
-        const flag = mesh(
-          new T.PlaneGeometry(0.065, 0.05),
-          label(String(j + 1), '#20251c', '#d9b75e'),
-          this.group,
-          [x, y + 0.13, z],
-        );
-        flag.rotation.y = side * 0.4;
-      }
-    }
+    buildCourseMarkers(this.group, groundHeight);
     this.sign('FERN CREEK', '01  /  MODERATE', -1.05, 0.2);
     this.sign('GRANITE SPINE', '02  /  ADVANCED', -2.7, 4.7);
     // Distant ridgeline, continuous triangulated mountains and subtle snow caps.
@@ -426,14 +368,16 @@ export class Park {
     }
     scene.add(this.group);
     const sky = new Sky();
+    this.sky = sky;
     sky.scale.setScalar(300);
     sky.material.uniforms.turbidity.value = 5;
     sky.material.uniforms.rayleigh.value = 1.8;
     const sunPos = new T.Vector3(-25, 35, -15);
     sky.material.uniforms.sunPosition.value.copy(sunPos);
     scene.add(sky);
-    scene.add(new T.HemisphereLight('#d7e8ed', '#4f5335', 2.1));
-    this.sun = new T.DirectionalLight('#ffe2af', 4.2);
+    this.hemisphere = new T.HemisphereLight('#cfdfeb', '#5f644c', 1.15);
+    scene.add(this.hemisphere);
+    this.sun = new T.DirectionalLight('#ffe6bd', 3.0);
     this.sun.position.copy(sunPos);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(2048, 2048);
@@ -588,7 +532,7 @@ export class Park {
   update(time: number, position: T.Vector3) {
     const mat = this.water.material as T.MeshPhysicalMaterial;
     mat.normalMap!.offset.set(time * 0.007, time * 0.011);
-    this.sun.position.copy(position).add(new T.Vector3(-10, 16, -8));
+    this.sun.position.copy(position).add(this.sunOffset);
     this.sun.target.position.copy(position);
     this.sun.target.updateMatrixWorld();
   }

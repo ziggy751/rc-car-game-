@@ -1,4 +1,12 @@
 export type Tune = {
+  vehicle: 'r1' | 'c2';
+  sidewall: number;
+  rearSpring: number;
+  rearDamping: number;
+  rebound: number;
+  travel: number;
+  rearTravel: number;
+  tread: 'trail' | 'rock';
   compound: 'soft' | 'trail' | 'hard';
   radius: number;
   spring: number;
@@ -34,13 +42,21 @@ export type Tune = {
   precision: boolean;
 };
 export const defaults: Tune = {
+  vehicle: 'r1',
+  sidewall: 2400,
+  rearSpring: 55,
+  rearDamping: 5,
+  rebound: 17.5,
+  travel: 0.071,
+  rearTravel: 0.071,
+  tread: 'rock',
   compound: 'soft',
   radius: 0.059,
   spring: 55,
   damping: 5,
   motor: 'torque',
   ride: 0.065,
-  paint: '#c48745',
+  paint: '#496d62',
   body: true,
   quality: 'High',
   audio: false,
