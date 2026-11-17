@@ -1,0 +1,1042 @@
+[
+  {
+    "folder": "00_full_reference_sheets",
+    "file": "garage.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2827465,
+    "sha256": "6ea61d53aaa29a4acc3bab7154e65029ef2d4c4faa3879eadec1e1febb79a60f"
+  },
+  {
+    "folder": "00_full_reference_sheets",
+    "file": "sheetA.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3576333,
+    "sha256": "fa3b593d767b035ef6856627e6daa46154886a186ca363f9d07095383dcc4042"
+  },
+  {
+    "folder": "00_full_reference_sheets",
+    "file": "sheetB.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 3679587,
+    "sha256": "2ac77f22dd49f6daddd1f08195694b834c26fd227488c831798a2018b8e2dfbe"
+  },
+  {
+    "folder": "00_full_reference_sheets",
+    "file": "sheetC.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3704462,
+    "sha256": "931e7a34774c2ff44628254c59e177c76e6756adcf08a3fe05181337af659bae"
+  },
+  {
+    "folder": "00_full_reference_sheets",
+    "file": "sheetD.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 3604362,
+    "sha256": "21d92c5072f35f637224b7ebf4a5f3e0d44e26ebceed685da944ab905bfb7e5c"
+  },
+  {
+    "folder": "00_full_reference_sheets",
+    "file": "tech.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2920916,
+    "sha256": "9361f57db77433d3ce880b53e8fc730230317c31f3193369b5e91c472e10d2ea"
+  },
+  {
+    "folder": "00_full_reference_sheets",
+    "file": "trail.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3511658,
+    "sha256": "f1b452d831a6fb7dfb09c89075f0017f67b5f048062876988f3a9aca63ebfe72"
+  },
+  {
+    "folder": "00_full_reference_sheets",
+    "file": "world.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 4059926,
+    "sha256": "0dea2661128eba286c51c96388b6805f1b01050b1a321d201d6ff34bccefe058"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "HERO_trail.jpg",
+    "width": 1672,
+    "height": 941,
+    "bytes": 658798,
+    "sha256": "dad6ab5f0fd4b84afed24e67c6c49b4cb8c71ae959d516a1ecc8c4a322c7f6e4"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetB_articulation.jpg",
+    "width": 303,
+    "height": 211,
+    "bytes": 32873,
+    "sha256": "2996f44a61746268938b9073dba77bfb458798b273a243ac407a5f61091b7893"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetB_competition_crawler.jpg",
+    "width": 303,
+    "height": 211,
+    "bytes": 32591,
+    "sha256": "831e254f47bdad147832330ce1a42b5a0e81416d418aa12de69be71783f4f93c"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetB_scale_crawler.jpg",
+    "width": 303,
+    "height": 211,
+    "bytes": 32295,
+    "sha256": "97ffa383876eddb128e493688ce06e3111c3c8b37b87d82d06296f6f027504ce"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetB_tire_deformation.jpg",
+    "width": 304,
+    "height": 211,
+    "bytes": 32436,
+    "sha256": "0fac68445d72cd92a91705a97c9591895b3828cbc2bd3142e1289ce6ab89ed60"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetB_trail_truck.jpg",
+    "width": 303,
+    "height": 211,
+    "bytes": 31035,
+    "sha256": "fe747756b35c9f2a89a9531c67032da120aab67beda46566f2a133bfc8fd9843"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetC_compact_crawler.jpg",
+    "width": 330,
+    "height": 238,
+    "bytes": 37107,
+    "sha256": "01e0d8f95d88f5525fe1567ceb998e00ea15ebc11b960eae1e77ffcc8134a8f6"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetC_competition_crawler.jpg",
+    "width": 330,
+    "height": 238,
+    "bytes": 39996,
+    "sha256": "251db69670d8e588ff6f7be01f183e47e1981dd05e72cd49811fb7b714f66ecf"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetC_large_crawler.jpg",
+    "width": 331,
+    "height": 238,
+    "bytes": 39616,
+    "sha256": "da7f6074702c151ae94ee80e42724ac603b4a58b45fd0250096ac68e8469e9ab"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetC_rock_bouncer.jpg",
+    "width": 331,
+    "height": 238,
+    "bytes": 37360,
+    "sha256": "8da12ea230493da5c43ce30c49e08241e99663d7270cfbbdee02dbd5b9fd503e"
+  },
+  {
+    "folder": "01_vehicles",
+    "file": "sheetC_scale_trail_truck.jpg",
+    "width": 330,
+    "height": 238,
+    "bytes": 38026,
+    "sha256": "bcb2152014446964f3ce1d41ce945f7fd231670be1e5bea2ea20d5c3686fc58e"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_chassis_rails.jpg",
+    "width": 330,
+    "height": 184,
+    "bytes": 25562,
+    "sha256": "ba6b2c2463533111986f9beb5821362518c72460e02be91b61c4b1106a250661"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_coilover_shock.jpg",
+    "width": 235,
+    "height": 109,
+    "bytes": 9500,
+    "sha256": "7f0a30ec8405d8ae6443a767ab6e880e5b2c71fe94659c73edaf3f19e10179d8"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_driveshaft.jpg",
+    "width": 234,
+    "height": 109,
+    "bytes": 9100,
+    "sha256": "e584b614ef452127a34946531614dc14f84d341f014d2c25c0c7c0d87bf57baa"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_four_link_suspension.jpg",
+    "width": 331,
+    "height": 184,
+    "bytes": 21360,
+    "sha256": "c9cc097a62001e4594ee51dd37ce98e4c08f8c5db4865bc99ed4c67b17840930"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_gravel_traction.jpg",
+    "width": 235,
+    "height": 109,
+    "bytes": 13716,
+    "sha256": "6904c1028ad81966f45f88856f8f3c74b88429c9b8ecbba6fea6d76ae9ccaa47"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_mud_traction.jpg",
+    "width": 235,
+    "height": 109,
+    "bytes": 14627,
+    "sha256": "c27ad1f2dd3c3bc2485f6128f84179a041934e27892e966898a97f9c17ce91b3"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_portal_axle.jpg",
+    "width": 330,
+    "height": 184,
+    "bytes": 21328,
+    "sha256": "fe682f4b3fa49820d472753db7206f33c9ee5d68cc8b61683a42fa1090c6cffb"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_steering_linkage.jpg",
+    "width": 331,
+    "height": 184,
+    "bytes": 17527,
+    "sha256": "ace2f2c1eba155b6697d9720302ff0248fcd18519a4ca5ead38a61a8b23d5e42"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_tire_flex.jpg",
+    "width": 235,
+    "height": 109,
+    "bytes": 11176,
+    "sha256": "5dab774900a2535042fa97d71abc86b50d6be87d963a501cc03c1ef2a0fe84ae"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_tire_tread.jpg",
+    "width": 235,
+    "height": 109,
+    "bytes": 11516,
+    "sha256": "9b2822b69d25344047a2e04461af6fa4d059e08fb6a300cfbcd372877a31d06d"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_trail_jeep.jpg",
+    "width": 330,
+    "height": 184,
+    "bytes": 26912,
+    "sha256": "0eef60261f61c08064ca20df0ab94519615ef1c07aef1a413e27610d7a97e915"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetA_wet_rock_grip.jpg",
+    "width": 235,
+    "height": 109,
+    "bytes": 12208,
+    "sha256": "7f6ef19fc71c4ab5f292239b3b024fc61ea8416dcc17a5407df2d8922a1305c9"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetC_articulation_closeup.jpg",
+    "width": 330,
+    "height": 166,
+    "bytes": 27589,
+    "sha256": "8e4e70184c8748ba79c72cd56892a9139fa3f854b64550514f12ac8f2acbd39a"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetC_chassis_closeup.jpg",
+    "width": 330,
+    "height": 166,
+    "bytes": 26903,
+    "sha256": "41b337395f995e4d71728c08d23a5fb654c9a39515b62dd5dba8006e1dfe5256"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetC_drivetrain_detail.jpg",
+    "width": 331,
+    "height": 166,
+    "bytes": 24715,
+    "sha256": "0348c06486485c2cc5deae0d94d918137c53a75f3f5bf5d61f9661e8bf096f92"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetC_interior_detail.jpg",
+    "width": 330,
+    "height": 166,
+    "bytes": 21997,
+    "sha256": "b1bfb4eaa464b8502cb0b4b1c1d1718d098be993424bb006f0f07056cb26a823"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetC_rubber_deformation.jpg",
+    "width": 331,
+    "height": 166,
+    "bytes": 24405,
+    "sha256": "12001609a07ca6b51af649cb89c0b09ea73a099e586da96bcea4d4398ce533f1"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_axle_flex.jpg",
+    "width": 303,
+    "height": 241,
+    "bytes": 34165,
+    "sha256": "d2c4a1cd9fbd04e8f45e6650414b531dff015ee30fe6adf4ed23c8003c463c9f"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_beadlocks.jpg",
+    "width": 303,
+    "height": 191,
+    "bytes": 23732,
+    "sha256": "4e6219e6a27e5497f5e34bb8b27fc334e05749a3e46d2986c895ecd5a07c4d84"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_chassis_roll.jpg",
+    "width": 304,
+    "height": 241,
+    "bytes": 34332,
+    "sha256": "822221d1f5a628a4001171bdb70b47b64882d657205bbbf6bdaa6ba4be2deeb9"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_orthographic_views.jpg",
+    "width": 303,
+    "height": 241,
+    "bytes": 30808,
+    "sha256": "be4b040203f190960f7efbca99c18645c526a79bb670c77d6eeddd4315b55ec3"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_shock_tuning.jpg",
+    "width": 304,
+    "height": 191,
+    "bytes": 21195,
+    "sha256": "acae98e35598ace1ad7a89d669e6a3342ad96a3486399a04dd3f69a029f8e0eb"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_spring_travel.jpg",
+    "width": 303,
+    "height": 241,
+    "bytes": 33246,
+    "sha256": "5d5ebf5b71be7a9f74acfc80a9f4730f0e9ba65376604b190e956dacff758c3d"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_steering_geometry.jpg",
+    "width": 303,
+    "height": 191,
+    "bytes": 20945,
+    "sha256": "186f3af0722f42ff39a7772ef95d67cb5986c687d883570bc1413714dfbe72d7"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_tire_compounds.jpg",
+    "width": 303,
+    "height": 191,
+    "bytes": 27284,
+    "sha256": "96d23f15d31668b57042057392d09b0558698b89b167dff418bba740ed175104"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_tire_contact.jpg",
+    "width": 303,
+    "height": 191,
+    "bytes": 27809,
+    "sha256": "8bf08ca7f1392f1ffa297f337f04476be5c54b55f680742a31bc0adcb834461d"
+  },
+  {
+    "folder": "02_suspension_and_physics",
+    "file": "sheetD_wheel_lift.jpg",
+    "width": 303,
+    "height": 241,
+    "bytes": 36617,
+    "sha256": "a37dc8ad5b8fa99e54fc783e4b3a9622599f3b9b4521ee34d91abcdff274ce01"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "HERO_tech.jpg",
+    "width": 1672,
+    "height": 941,
+    "bytes": 549021,
+    "sha256": "6f1406e96ef417c00dc725ff801bbe8edf987e167fdafb24b0a016f3fca2eabb"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetA_battery.jpg",
+    "width": 235,
+    "height": 118,
+    "bytes": 12267,
+    "sha256": "78bad84a686922d90a736422e482f9ebaf6f63d891e14232b44ed0a015001110"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetA_crawler_motor.jpg",
+    "width": 234,
+    "height": 118,
+    "bytes": 8963,
+    "sha256": "b754a58c34238228a0d33d0b5af1dd14a500bbcd97660e61945af90639b17157"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetA_electronics_install.jpg",
+    "width": 235,
+    "height": 118,
+    "bytes": 15056,
+    "sha256": "63dbd952af155a81e2ed8da0a5ac8fd5ee5cb1cacb7a72ac947922953eae7d89"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetA_esc_electronics.jpg",
+    "width": 235,
+    "height": 118,
+    "bytes": 11580,
+    "sha256": "66b75285d71b9122484bf1bad8295ac55f55379de970364860db4de5e0accaae"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetA_gearbox.jpg",
+    "width": 235,
+    "height": 118,
+    "bytes": 11415,
+    "sha256": "5a1c4b63aae9c42ce9f836a10f911d16e175c73a40a4dd7e0085230585051766"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetA_workshop_overview.jpg",
+    "width": 235,
+    "height": 118,
+    "bytes": 14405,
+    "sha256": "1162984958f52ea434e9ed63647d59cf8727b7fba256390529ea429f668934aa"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetA_workshop_parts.jpg",
+    "width": 235,
+    "height": 118,
+    "bytes": 13356,
+    "sha256": "45db50729a259323641a3afd343e8a24c49fde5715304119bc87d33780a94276"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_axle_and_differential.jpg",
+    "width": 215,
+    "height": 144,
+    "bytes": 13242,
+    "sha256": "8e46fcb4e9419f7955e11f077a9bc7be38a78616e7439c02bb89a352d82a690f"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_battery_detail.jpg",
+    "width": 215,
+    "height": 144,
+    "bytes": 13012,
+    "sha256": "2b3a553e4656bc9133924539401fbd4bf726de15a090446f3b016f9f3b117506"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_beadlock_wheels.jpg",
+    "width": 252,
+    "height": 140,
+    "bytes": 16343,
+    "sha256": "ed12060dfa8b33cfb9a44ba6ff2d5e89f8e07a5fdb393262086d0990c15d171c"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_body_shells.jpg",
+    "width": 252,
+    "height": 140,
+    "bytes": 14323,
+    "sha256": "e863864e4726db265c9d5efe425e7a10fcb4778268a7a4268643c07eee0b9f37"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_chassis_and_drivetrain.jpg",
+    "width": 215,
+    "height": 144,
+    "bytes": 17024,
+    "sha256": "8f624583d116fe4f47399b26d3c65a0dfeb275989816123cadad6a52a23bee1c"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_esc_detail.jpg",
+    "width": 216,
+    "height": 144,
+    "bytes": 12546,
+    "sha256": "6796458b103301f22bd88b8ec517ed190b4de73e910d3370e0c55b825abba07c"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_gearing.jpg",
+    "width": 252,
+    "height": 140,
+    "bytes": 13726,
+    "sha256": "b664d5b92991c6c3327fd02d895e9b0089c069ae12fa8f0a45e662a837fdb0ed"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_motor_detail.jpg",
+    "width": 215,
+    "height": 144,
+    "bytes": 11751,
+    "sha256": "0206277c1efa375d8d5947b0a4e9195d46664f6a17073acc666946d370834f93"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_paint_and_decals.jpg",
+    "width": 252,
+    "height": 140,
+    "bytes": 13767,
+    "sha256": "3067985d77eae07cc2fa0b807e8c2ff9fc1ec20707118fefd78e4795a211c284"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_servo_detail.jpg",
+    "width": 216,
+    "height": 144,
+    "bytes": 10644,
+    "sha256": "175e877a2072ad39e13136bc641131e4295a880c1b0fadcf3094b70f4d91e98f"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_shock_set.jpg",
+    "width": 216,
+    "height": 144,
+    "bytes": 12242,
+    "sha256": "4cb3fef074d24e734539a12030bc9cc0d556a0fb5d2b175207aa51ce969ae9b8"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_tires_collection.jpg",
+    "width": 252,
+    "height": 140,
+    "bytes": 16192,
+    "sha256": "60f8f83446dd59e76908fb39a8ef4e0040639f64b8df383c33e9d65a66a23cb6"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetB_winch.jpg",
+    "width": 252,
+    "height": 140,
+    "bytes": 14065,
+    "sha256": "b81ca639273bdae9c01f30280fce73acde00d0ca1346cb359375a3688f467468"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetD_battery_placement.jpg",
+    "width": 252,
+    "height": 180,
+    "bytes": 18449,
+    "sha256": "145dfdb49e71d07da46bcb4b64cb761c04a283507529835a6d11af0754019ab5"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetD_drivetrain_layout.jpg",
+    "width": 252,
+    "height": 180,
+    "bytes": 19932,
+    "sha256": "966bb1a0f67da23ac9ec50558253e6f2566f7c2c4ffe050ca1ba5063b976409c"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetD_electronics.jpg",
+    "width": 252,
+    "height": 180,
+    "bytes": 18946,
+    "sha256": "e1af88858e557f63193ddeb4a63a2c71bbf3cdec5dff5be643a261ace45e59fa"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetD_gearbox_gears.jpg",
+    "width": 252,
+    "height": 180,
+    "bytes": 18820,
+    "sha256": "8d9b29bbebdb8703df5484ecc4c1723364a39c803e59685407b3256a2ecc8547"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetD_motor_options.jpg",
+    "width": 252,
+    "height": 180,
+    "bytes": 18430,
+    "sha256": "11cdbd314191f720e24f9f676d3313a12c33e27b1ba6137dd1520bef0a78b83a"
+  },
+  {
+    "folder": "03_parts_and_upgrades",
+    "file": "sheetD_winch_system.jpg",
+    "width": 252,
+    "height": 180,
+    "bytes": 17782,
+    "sha256": "a29988fafc4d4d466ca572d69766d3b02c8a5b577dc7638c75eeb573fb2de6bc"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "HERO_garage.jpg",
+    "width": 1672,
+    "height": 941,
+    "bytes": 539367,
+    "sha256": "c807408284fe4f10337af9d1920a5c1331f555d10dd4f74f70607581ee8309b1"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetA_customization_screen.jpg",
+    "width": 330,
+    "height": 156,
+    "bytes": 21477,
+    "sha256": "fc430e7a0ae703284a230c73528d7d1b0bfbf56b7eb081c80be7633fc4514f01"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetA_paint_wrap.jpg",
+    "width": 331,
+    "height": 156,
+    "bytes": 21781,
+    "sha256": "555d9b02fc3f8ced1ff8e0d6cd29b00b85f9655615494a3f411f406ff822fed7"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetA_parts_library.jpg",
+    "width": 330,
+    "height": 156,
+    "bytes": 24348,
+    "sha256": "0bfa1f6d883a7c40f8970bb375e13ebccff61251705091a8ae836b6ad2e5a1cc"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetA_upgrade_station.jpg",
+    "width": 330,
+    "height": 156,
+    "bytes": 23672,
+    "sha256": "2c0c76a133a58387c9a53baa1bbea5c8720dacdbe857348661da899dd95522a2"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetA_vehicle_inspection.jpg",
+    "width": 331,
+    "height": 156,
+    "bytes": 24669,
+    "sha256": "9ee2078dc6786cd4df1968fbe1a78ddab73699b1caf11c75f9e1df1e32ff32b2"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetB_customization_ui.jpg",
+    "width": 304,
+    "height": 169,
+    "bytes": 18323,
+    "sha256": "a568cb7042fc5372253fc1476a114d7cdf3cbd16c992ff6a740e74af57cf2068"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetB_garage_workshop.jpg",
+    "width": 303,
+    "height": 169,
+    "bytes": 26618,
+    "sha256": "1c2e1c437cbf3404bd83ed38b48fe747b84c548291e80abd64a46c4fb5e3f57b"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetB_maintenance.jpg",
+    "width": 303,
+    "height": 169,
+    "bytes": 21256,
+    "sha256": "29639c001fc24c0e4f55aa7d02f23159d2a5fcc961a003d0a26eac42cc063163"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetB_parts_shelves.jpg",
+    "width": 303,
+    "height": 169,
+    "bytes": 24388,
+    "sha256": "147938089b9445fbfd3c439f060ff58ba19bf9af99fa970f90cb845b6e2ae279"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetB_tuning_bench.jpg",
+    "width": 303,
+    "height": 169,
+    "bytes": 23193,
+    "sha256": "5380a79e20c2dcaf71f6b6a4b86f5136e1c1ae77ba6ab0f11507e49c0297a10d"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetC_customization_garage.jpg",
+    "width": 553,
+    "height": 346,
+    "bytes": 79611,
+    "sha256": "50f23154d20ee51fa956d2d9cb60e462fbf7c6c510846805b534ac0f851e5eff"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetC_paint_suspension_tuning.jpg",
+    "width": 554,
+    "height": 346,
+    "bytes": 70707,
+    "sha256": "3730ac5ee3a74f2b6c1ca45ec3d8d03742a2f2cc7d76aa6287ca13cf6a6b938f"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetC_parts_upgrade_wall.jpg",
+    "width": 553,
+    "height": 346,
+    "bytes": 75306,
+    "sha256": "7f25fa56110c6dde1f0b21561108c0a951f3814c120df3447b71f3a9c8ad3154"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetD_body_options.jpg",
+    "width": 303,
+    "height": 180,
+    "bytes": 28978,
+    "sha256": "ab436c7a57c704f5e8c873f0c79cb1fb56816a9c632441d17e61b3a9b7628080"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetD_garage.jpg",
+    "width": 303,
+    "height": 180,
+    "bytes": 25578,
+    "sha256": "25dd3da86f67cf33b53f12ec744aa08528cd920451a5c94a21cc2d9785fd773b"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetD_gear_ratio_parts.jpg",
+    "width": 303,
+    "height": 180,
+    "bytes": 22557,
+    "sha256": "8f26976c18e688a0c8d672d23f0baf96558c1bd568ae42a19b0e0aa79b987f25"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetD_shock_adjustment.jpg",
+    "width": 303,
+    "height": 180,
+    "bytes": 24171,
+    "sha256": "ca6e4a656d1f891b89fe6ed1705b235d511797d8e469a91a3031307845c90100"
+  },
+  {
+    "folder": "04_garage_and_customization",
+    "file": "sheetD_upgrade_progression.jpg",
+    "width": 304,
+    "height": 180,
+    "bytes": 22403,
+    "sha256": "1b88a0bdc933db19c2f6662dc052021762979310e0be5f4c90d7d3663f008ba3"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "HERO_world.jpg",
+    "width": 1672,
+    "height": 941,
+    "bytes": 808300,
+    "sha256": "5ddd79db87db7288258b41536ba749b8363fdd612d4268622fcae0ba92f58731"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_crawler_park.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 22361,
+    "sha256": "368fe69fde6cff438ab4c3d8ff62e81c0741b3e66fb6f562239971b74d01da85"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_desert_trails.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 19961,
+    "sha256": "1d559dcfdfb15f29ecbb8e702c77ced64d2556f52610d80891dd00b6d3b4962d"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_forest_trails.jpg",
+    "width": 234,
+    "height": 175,
+    "bytes": 21393,
+    "sha256": "0aa67c83e287053503b45c21b29fe7e1b7efcee1255bc4474ed3a5ba2b7625a8"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_mountain_trails.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 20601,
+    "sha256": "f368d51dbd0fd6bb1a0de949f37093e04fa134acfab0ab2d6ce0169df8a3ed78"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_night_driving.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 19034,
+    "sha256": "03bc18845c899b5cb3781734eb7fa97004beaa4695b98cf864a627f3b9de908f"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_quarry.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 20554,
+    "sha256": "12b71d1e2732a643a6428e8f8cd3bb3ee489c70163e2de6dd7b6784929a7a413"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_rain_wet.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 20558,
+    "sha256": "d85d5286534ecf3ff5ea6801ee2a9eff1c9354a7bcf4becb1a695a597943ecb6"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_river_crossing.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 21418,
+    "sha256": "d15fca1cee464b92d9c04a3f7e22adbf8ed06c6051aee2c08fdfd3dac2ce13b6"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_rock_crawling.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 19668,
+    "sha256": "401c629b91fd062e2faaa93bb8e892c12a276edb480e88352b9cad871660520d"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_sunset_weather.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 20672,
+    "sha256": "a26102e002971c017c57deb5d0ded215deaf55f30a10cd1e2b0b75119ce6826f"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_technical_course.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 21335,
+    "sha256": "3f8ad493b53e76647009f77c9bf8d16e2a53afdccd6d730d2c76b5b492e9891f"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_vegetation_detail.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 22719,
+    "sha256": "aff10c585c82d1f5b2e2a3693102e32153610868d689023e00919e33d56d46cd"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_waterfall.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 19880,
+    "sha256": "ebf59efe9b6a6794b66a7853ae85fa5d7cec1ccad8cf2a335cf43a21cd34b485"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetA_wooden_bridge.jpg",
+    "width": 234,
+    "height": 175,
+    "bytes": 21701,
+    "sha256": "7a3f4719c4b2e1d7cc75f3c3119959c779edc6b9ef2b65be5ad404d5238eeeca"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_competition_course.jpg",
+    "width": 304,
+    "height": 168,
+    "bytes": 28240,
+    "sha256": "28201f348828c99178485e9e65e0fcb281129838c824493cd2a41fd3088741a3"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_crawler_park.jpg",
+    "width": 303,
+    "height": 168,
+    "bytes": 27421,
+    "sha256": "c67146cf08f3a4cbf2e1931a3a0bb54160fc8ac642f6a52548940121b8688ed2"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_desert_gully.jpg",
+    "width": 303,
+    "height": 168,
+    "bytes": 26495,
+    "sha256": "d7b6db25f0b6abb1ccb91d225256e1fdb06add08940dd7f8fdeebf7135132380"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_forest_trail.jpg",
+    "width": 303,
+    "height": 168,
+    "bytes": 27963,
+    "sha256": "e3c053be004b9baad66d5f2fb99ba30bd633432f31799ee0f705237852dbdbe6"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_mud_trail.jpg",
+    "width": 303,
+    "height": 168,
+    "bytes": 27027,
+    "sha256": "c051e0011211130a2c2d45cb4cc0d5e846ab79656cf558b4c957e40a0a770c5e"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_quarry.jpg",
+    "width": 303,
+    "height": 168,
+    "bytes": 25657,
+    "sha256": "94b29ebd5c0d173b9b4812a118c56e9194059c20edeb8b9551eae166bec61e9d"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_river_crossing.jpg",
+    "width": 303,
+    "height": 168,
+    "bytes": 27504,
+    "sha256": "3c0120fd54e7a47937c02be2451a45708f535c5fe0a13dcfada59d5edb86b4fe"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_rock_garden.jpg",
+    "width": 303,
+    "height": 168,
+    "bytes": 27538,
+    "sha256": "3cd6040c8dac9b5ed010f4fd1a6f1baf4385bd04cec69211377a3038c134ecc9"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_waterfall.jpg",
+    "width": 304,
+    "height": 168,
+    "bytes": 27776,
+    "sha256": "04e6f4c4607b7507b338ba646eddf323ec6885e4ff4549d488be1984830d6055"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetB_wood_bridge.jpg",
+    "width": 303,
+    "height": 168,
+    "bytes": 26436,
+    "sha256": "5ee3abb2606144f032392310ed7e0d2c69105e316dcb3b32451341d36e44b736"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetC_boulder_field.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 20992,
+    "sha256": "f591209e27d664b4d1e78e814b42fb9080569f92fd8ff5f0c024000e011cc88d"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetC_deep_mud.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 21366,
+    "sha256": "002910ff323ae4d9cc8842106e067ff9dd19b17c0eccafee31af84cd974f1dc3"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetC_forest_root_trail.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 22144,
+    "sha256": "2341ffb9117ab559de03d2a43fa545bb31a251fb853b14d0c9ff971c7fe0f3c3"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetC_rock_slabs.jpg",
+    "width": 234,
+    "height": 175,
+    "bytes": 21162,
+    "sha256": "0d886cc8b4bf4b4e4a6e88b3b953befc1a6b3004b6a9f893f56afb89bdabef8e"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetC_sidehill.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 21415,
+    "sha256": "f9dbb2ed1a9ea591fed11509fb5a597da07a6a2de9ce916fd126d8f54097b4ed"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetC_steep_climb.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 22076,
+    "sha256": "9e3c4173199763749424b7e11e9ccf05eb4f4112a4ee990b5641f82df1417967"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetC_water_crossing.jpg",
+    "width": 235,
+    "height": 175,
+    "bytes": 21226,
+    "sha256": "0d71ce6681c346d8f1eaea2df8791b66852f7a53a2271aeb5df8d91ea0125972"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetD_competition_biome.jpg",
+    "width": 252,
+    "height": 150,
+    "bytes": 21441,
+    "sha256": "28d2a323560d5b9b8a1132c2ea549617ff9439d54c28226c5a7930a0206453eb"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetD_desert_biome.jpg",
+    "width": 252,
+    "height": 150,
+    "bytes": 21232,
+    "sha256": "e116986a0ddefc0458c357f342902d1892d36a8b794e74217fd56189f30e9b86"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetD_forest_biome.jpg",
+    "width": 252,
+    "height": 150,
+    "bytes": 21725,
+    "sha256": "b876bcab2df7125fe47c649933dc370d6c8b160893d72f3c5e2e7a5aab1f6507"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetD_mountain_biome.jpg",
+    "width": 252,
+    "height": 150,
+    "bytes": 21707,
+    "sha256": "d233d120f531b1233b68433470ab12c6c56331c91ed8dd894658ae1c2212d84d"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetD_quarry_biome.jpg",
+    "width": 252,
+    "height": 150,
+    "bytes": 20682,
+    "sha256": "ce378eb6d8f639739c57bcbc6c6c69e877007d296ca6b71c818d53be850f8a0c"
+  },
+  {
+    "folder": "05_map_and_terrain",
+    "file": "sheetD_river_biome.jpg",
+    "width": 252,
+    "height": 150,
+    "bytes": 20954,
+    "sha256": "ed0a43f1d03e908c0b37478db13e0507492c682bb87513865701ec68e8d350de"
+  }
+]

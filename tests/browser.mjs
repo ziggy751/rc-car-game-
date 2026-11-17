@@ -1,0 +1,31 @@
+import {chromium} from '@playwright/test';
+import assert from 'node:assert/strict';
+import {mkdirSync} from 'node:fs';
+mkdirSync('.artifacts',{recursive:true});
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader']});
+let page;const errors=[];const checks=[];
+try{
+ page=await browser.newPage({viewport:{width:1280,height:900},deviceScaleFactor:1});page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(process.env.TEST_URL || 'http://127.0.0.1:5173');await page.waitForFunction(()=>window.__RIDGEBOUND__,undefined,{timeout:120000});
+ await page.waitForTimeout(1200);assert.equal(await page.locator('#loading.done').count(),1);checks.push('WebGL renderer and Rapier initialise');
+ console.log('initial',await page.evaluate(()=>{const g=window.__RIDGEBOUND__;return {p:g.sim.body.translation(),contacts:g.sim.contacts,speed:g.sim.controller.currentVehicleSpeed(),calls:g.renderer.info.render.calls,triangles:g.renderer.info.render.triangles}}));
+ await page.screenshot({path:'.artifacts/trail-final.png',timeout:60000});
+ await page.evaluate(()=>{window.__RIDGEBOUND__.state.tune.quality='Low';window.__RIDGEBOUND__.ui.onTune();});
+ await page.locator('#start').click();await page.keyboard.down('KeyW');await page.waitForFunction(()=>window.__RIDGEBOUND__.sim.distance>.12,undefined,{timeout:60000});await page.keyboard.up('KeyW');
+ const distance=await page.evaluate(()=>window.__RIDGEBOUND__.sim.distance);assert.ok(distance>.05,'keyboard moves vehicle');checks.push('Keyboard throttle moves the physical chassis');
+ await page.locator('nav [data-mode=garage]').click();await page.locator('#tab-style').click();await page.locator('[data-color="#42657b"]').click();await page.locator('#body').uncheck();
+ assert.equal(await page.evaluate(()=>window.__RIDGEBOUND__.car.shell.visible),false);checks.push('Body removal exposes model; paint applies');
+ await page.screenshot({path:'.artifacts/mechanics.png',timeout:60000});
+ await page.locator('#tab-tune').click();await page.locator('#compound').selectOption('hard');await page.locator('#motor').selectOption('trail');
+ await page.locator('#radius').fill('130');await page.locator('#radius').dispatchEvent('input');
+ const tune=await page.evaluate(()=>({radius:window.__RIDGEBOUND__.sim.controller.wheelRadius(0),compound:window.__RIDGEBOUND__.state.tune.compound}));assert.ok(Math.abs(tune.radius-.065)<.00001);assert.equal(tune.compound,'hard');checks.push('Garage tuning changes the live physics controller');
+ await page.locator('#tab-builds').click();await page.locator('#build-name').fill('Browser test expedition');await page.locator('#save-build').click();assert.equal(await page.locator('[data-build]').count(),1);checks.push('Build saved');
+ await page.locator('#tab-style').click();await page.locator('#body').check();await page.screenshot({path:'.artifacts/garage-final.png',timeout:60000});
+ await page.locator('nav [data-mode=map]').click();await page.screenshot({path:'.artifacts/map.png',timeout:60000});await page.locator('.trail-list [data-trail="2"]').click();
+ assert.equal(await page.evaluate(()=>window.__RIDGEBOUND__.ui.activeTrail),2);checks.push('Map teleports to selected trailhead');
+ await page.locator('#photo').click();assert.equal(await page.locator('body.photo').count(),1);await page.locator('#exit-photo').click();checks.push('Photo mode pauses and exits');
+ await page.reload();await page.waitForFunction(()=>window.__RIDGEBOUND__,undefined,{timeout:120000});
+ const saved=await page.evaluate(()=>window.__RIDGEBOUND__.state);assert.equal(saved.builds[0].name,'Browser test expedition');assert.equal(saved.tune.compound,'hard');checks.push('Build and tuning survive reload');
+ await page.setViewportSize({width:390,height:844});await page.evaluate(()=>{window.__RIDGEBOUND__.state.tune.quality='Low';window.__RIDGEBOUND__.ui.onTune();});await page.screenshot({path:'.artifacts/mobile.png',timeout:60000});assert.equal(await page.locator('#touch').isVisible(),true);checks.push('Mobile layout and touch controls render');
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({checks,distance,pageErrors:errors},null,2));
+}finally{await browser.close();}
