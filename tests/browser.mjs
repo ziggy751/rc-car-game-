@@ -20,7 +20,7 @@ try {
     if (!localStorage.getItem('ridgebound.save.v1'))
       localStorage.setItem(
         'ridgebound.save.v1',
-        JSON.stringify({ version: 1, tune: { quality: 'Low' }, credits: 1000, completed: [] }),
+        JSON.stringify({ version: 1, tune: { quality: 'Low' }, credits: 0, completed: [] }),
       );
   });
   await page.goto(process.env.TEST_URL || 'http://127.0.0.1:5173');
@@ -36,14 +36,15 @@ try {
   await page.locator('[data-vehicle=c2]').click();
   assert.equal(await game(() => window.__RIDGEBOUND__.preview.tune.vehicle), 'c2');
   assert.equal(await game(() => window.__RIDGEBOUND__.sim.tune.vehicle), 'r1');
-  await page.locator('#buy-vehicle').click();
-  assert.equal(await game(() => window.__RIDGEBOUND__.state.credits), 400);
+  assert.equal(await page.locator('#buy-vehicle,#sell-vehicle').count(), 0);
+  assert.equal(await page.locator('[data-vehicle]').count(), 4);
+  await page.locator('#select-vehicle').click();
+  assert.equal(await game(() => window.__RIDGEBOUND__.state.credits), 0);
   assert.equal(await game(() => window.__RIDGEBOUND__.sim.tune.vehicle), 'c2');
   assert.ok(Math.abs((await game(() => window.__RIDGEBOUND__.sim.mass)) - 2.85) < 0.001);
   assert.equal(await game(() => window.__RIDGEBOUND__.sim.paused), true);
   await snap('upgrade-c2-owned');
-  checks.push('3D C2 preview, purchase, real mass and paused selection');
-  await page.locator('#select-vehicle').click();
+  checks.push('Free C2 selection at zero points, real mass and paused preview');
   assert.equal(await game(() => window.__RIDGEBOUND__.ui.mode), 'workshop');
   await page.locator('#compound').selectOption('hard');
   await page.locator('#radius').fill('130');

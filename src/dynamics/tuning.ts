@@ -1,6 +1,11 @@
 export type Tune = {
-  vehicle: 'r1' | 'c2';
+  vehicle: 'r1' | 'c2' | 'w3' | 'b4';
   sidewall: number;
+  frontOverdrive: number;
+  rearUnderdrive: number;
+  ballast: number;
+  ballastPosition: number;
+  linkHeight: number;
   rearSpring: number;
   rearDamping: number;
   rebound: number;
@@ -44,6 +49,11 @@ export type Tune = {
 export const defaults: Tune = {
   vehicle: 'r1',
   sidewall: 2400,
+  frontOverdrive: 0,
+  rearUnderdrive: 0,
+  ballast: 0,
+  ballastPosition: 0,
+  linkHeight: 0,
   rearSpring: 55,
   rearDamping: 5,
   rebound: 17.5,

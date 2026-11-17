@@ -1,6 +1,7 @@
 import * as T from 'three';
 import type { Simulation } from './physics';
 import type { Graphics } from './graphics';
+import { averageMud, cleanCondition, updateCondition, type SurfaceCondition } from './soiling';
 import { v, q } from './dynamics/math';
 export type ContactSample = {
   contact: boolean;
@@ -44,6 +45,10 @@ export function effectIntent(s: ContactSample) {
     .normalize();
   return {
     rate,
+    dustRate:
+      !s.water && s.contact && (s.surface === 'Forest loam' || s.surface === 'Gravel')
+        ? Math.min(45, Math.abs(s.speed) * 32 * Math.min(1.5, s.load / 8))
+        : 0,
     kind,
     direction,
     track: s.contact && loose && !s.water,
@@ -125,6 +130,10 @@ export class ParticlePool {
 export type SoilUniforms = {
   soil: { value: number };
   wet: { value: number };
+  zones: { value: Float32Array };
+  dust: { value: number };
+  wear: { value: number };
+  wheelCentres: { value: T.Vector3[] };
   vehicleInverse: { value: T.Matrix4 };
 };
 export function weatherMaterial(material: T.MeshStandardMaterial, uniforms: SoilUniforms) {
@@ -136,6 +145,10 @@ export function weatherMaterial(material: T.MeshStandardMaterial, uniforms: Soil
       vehicleSoil: uniforms.soil,
       vehicleWet: uniforms.wet,
       vehicleInverse: uniforms.vehicleInverse,
+      mudZones: uniforms.zones,
+      vehicleDust: uniforms.dust,
+      vehicleWear: uniforms.wear,
+      soilWheels: uniforms.wheelCentres,
     });
     shader.vertexShader =
       'varying vec3 soilLocal;uniform mat4 vehicleInverse;\n' + shader.vertexShader;
@@ -144,16 +157,36 @@ export function weatherMaterial(material: T.MeshStandardMaterial, uniforms: Soil
       '#include <begin_vertex>\n vec4 soilVertex=vec4(position,1.0);\n #ifdef USE_INSTANCING\n soilVertex=instanceMatrix*soilVertex;\n #endif\n soilLocal=(vehicleInverse*modelMatrix*soilVertex).xyz;',
     );
     shader.fragmentShader =
-      'varying vec3 soilLocal;uniform float vehicleSoil;uniform float vehicleWet;\n' +
+      'varying vec3 soilLocal;uniform float vehicleSoil;uniform float vehicleWet;uniform float mudZones[8];uniform vec3 soilWheels[4];uniform float vehicleDust;uniform float vehicleWear;float soilHash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}float soilNoise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(mix(soilHash(i),soilHash(i+vec3(1,0,0)),f.x),mix(soilHash(i+vec3(0,1,0)),soilHash(i+vec3(1,1,0)),f.x),f.y),mix(mix(soilHash(i+vec3(0,0,1)),soilHash(i+vec3(1,0,1)),f.x),mix(soilHash(i+vec3(0,1,1)),soilHash(i+vec3(1,1,1)),f.x),f.y),f.z); }\n' +
       shader.fragmentShader;
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <color_fragment>',
       `#include <color_fragment>
-   float grain=fract(sin(dot(floor(soilLocal*1600.0),vec3(12.98,78.23,37.71)))*43758.54);float lower=1.0-smoothstep(.04,.16,soilLocal.y);float coverage=smoothstep(1.0-max(.0001,vehicleSoil*lower),1.0,grain)*step(.0001,vehicleSoil*lower);diffuseColor.rgb=mix(diffuseColor.rgb,mix(vec3(.16,.12,.075),vec3(.065,.057,.04),vehicleWet),coverage*.9);diffuseColor.rgb*=1.0-vehicleWet*.12;
+   float coatCoverage=0.0;float thickness=0.0;
+   if(vehicleSoil+vehicleDust+vehicleWear>.0001){
+   float coatLevel=0.0;float nearestWheel=100.0;
+   for(int i=0;i<4;i++){float d=length(soilLocal-soilWheels[i]);nearestWheel=min(nearestWheel,d);float rubberMask=1.0-smoothstep(.065,.085,d);float sameSide=1.0-smoothstep(.035,.13,abs(soilLocal.x-soilWheels[i].x));float archMask=sameSide*exp(-pow((soilLocal.z-soilWheels[i].z)/.085,2.0))*smoothstep(.018,.08,abs(soilLocal.x))* (1.0-smoothstep(.11,.17,soilLocal.y));coatLevel=max(coatLevel,max(mudZones[i]*rubberMask,mudZones[i+4]*archMask));}
+   float underside=(1.0-smoothstep(.015,.07,soilLocal.y))*smoothstep(.085,.105,nearestWheel);coatLevel=max(coatLevel,vehicleSoil*underside*.8);
+   float blob=soilNoise(soilLocal*155.0)*.68+soilNoise(soilLocal*540.0)*.32;
+   coatCoverage=smoothstep(.74-coatLevel*.62,.85-coatLevel*.45,blob)*smoothstep(0.0,.025,coatLevel);
+   thickness=coatCoverage*(.45+soilNoise(soilLocal*310.0)*.55);
+   vec3 mudColour=mix(vec3(.24,.18,.105),vec3(.065,.045,.024),vehicleWet);
+   diffuseColor.rgb=mix(diffuseColor.rgb,mudColour,coatCoverage*.96);
+   float dustMask=vehicleDust*(.25+soilNoise(soilLocal*80.0)*.6)*(1.0-vehicleWet*.85);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.32,.27,.18),dustMask*.55);
+   float scratch=step(.987,soilHash(floor(soilLocal*vec3(60,3500,75))))*vehicleWear*smoothstep(.065,.102,abs(soilLocal.x));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.22,.24,.22),scratch*.8);
+   }
   `,
     );
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <roughnessmap_fragment>',
+      '#include <roughnessmap_fragment>\n roughnessFactor=mix(roughnessFactor,mix(.96,.32,vehicleWet),coatCoverage);',
+    );
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <normal_fragment_maps>',
+      '#include <normal_fragment_maps>\n normal=normalize(normal+vec3(dFdx(thickness),dFdy(thickness),0.0)*.22);',
+    );
   };
-  material.customProgramCacheKey = () => key() + '-contact-soil-v1';
+  material.customProgramCacheKey = () => key() + '-zoned-mud-v2';
   material.needsUpdate = true;
 }
 function instanceFade(mesh: T.InstancedMesh) {
@@ -201,8 +234,20 @@ function trackMask() {
 export class EnvironmentEffects {
   group = new T.Group();
   pool = new ParticlePool(1000);
-  soil = 0;
-  wet = 0;
+  condition: SurfaceCondition = cleanCondition();
+  get soil() {
+    return averageMud(this.condition);
+  }
+  set soil(value: number) {
+    this.condition.mud.fill(T.MathUtils.clamp(value, 0, 1));
+  }
+  get wet() {
+    return this.condition.wet;
+  }
+  set wet(value: number) {
+    this.condition.wet = value;
+  }
+  dustAmount = [0, 0, 0, 0];
   time = 0;
   amount = [0, 0, 0, 0];
   lastTracks = [
@@ -350,7 +395,7 @@ export class EnvironmentEffects {
     this.rain.geometry.attributes.position.needsUpdate = true;
   }
   clean() {
-    this.soil = this.wet = 0;
+    this.condition = cleanCondition();
   }
   sample(sim: Simulation, index: number): ContactSample {
     const w = sim.wheels[index],
@@ -378,13 +423,17 @@ export class EnvironmentEffects {
   }
   step(dt: number, sim: Simulation, graphics: Graphics) {
     this.time += dt;
-    let mud = 0,
-      wash = 0;
+    const samples: ContactSample[] = [];
     for (let i = 0; i < 4; i++) {
       const s = this.sample(sim, i),
         intent = effectIntent(s);
-      mud += intent.mud;
-      wash += intent.wash;
+      samples.push(s);
+      this.dustAmount[i] += intent.dustRate * graphics.particles * dt;
+      while (this.dustAmount[i] >= 1) {
+        this.pool.emit(s, intent, true);
+        this.dustAmount[i]--;
+      }
+
       this.amount[i] += intent.rate * graphics.particles * dt;
       let emitted = 0;
       while (this.amount[i] >= 1 && emitted++ < 12) {
@@ -421,8 +470,7 @@ export class EnvironmentEffects {
         this.lastRipple[i] = this.time;
       }
     }
-    this.soil = T.MathUtils.clamp(this.soil + (mud - wash * this.soil) * dt, 0, 1);
-    this.wet = T.MathUtils.clamp(this.wet + wash * dt - this.wet * dt * 0.04, 0, 1);
+    updateCondition(this.condition, samples, dt, sim.bodyScrape);
     for (let t = 0; t < dt; t += 0.025) this.pool.update(Math.min(0.025, dt - t), this.height);
   }
   render(graphics: Graphics) {

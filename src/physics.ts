@@ -1,5 +1,6 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import { Quaternion, Vector3 } from 'three';
+import { recoverySupport } from './dynamics/collision';
 import { vehicleSpec } from './catalogue';
 import { defaults, type Tune } from './dynamics/tuning';
 import { v, q, point, clamp, approach, exponential, ackermann } from './dynamics/math';
@@ -17,6 +18,7 @@ export type VehiclePose = {
 };
 export type Link = {
   body: RAPIER.RigidBody;
+  topJoint: RAPIER.ImpulseJoint;
   axle: RAPIER.RigidBody;
   top: Vector3;
   bottom: Vector3;
@@ -78,6 +80,7 @@ export class Simulation {
   motorCurrent = 0;
   usedAh = 0;
   physicsMs = 0;
+  bodyScrape = 0;
   servoTargets = [0, 0];
   driveshaftAngles = [0, 0];
   previous!: VehiclePose;
@@ -96,6 +99,7 @@ export class Simulation {
     this.height = options.heightAt ?? (() => 0);
     world.integrationParameters.numSolverIterations = 32;
     world.integrationParameters.numInternalPgsIterations = 2;
+    world.integrationParameters.maxCcdSubsteps = 4;
     world.integrationParameters.lengthUnit = 1;
     world.integrationParameters.normalizedAllowedLinearError = 0.0002;
     world.integrationParameters.normalizedPredictionDistance = 0.001;
@@ -120,6 +124,15 @@ export class Simulation {
           this.body,
         ),
       );
+    this.bodyColliders.push(
+      this.world.createCollider(
+        RAPIER.ColliderDesc.cuboid(0.025, 0.007, 0.025)
+          .setTranslation(0, 0.018, 0)
+          .setMass(0)
+          .setCollisionGroups(VEHICLE),
+        this.body,
+      ),
+    );
     for (let a = 0; a < 2; a++) {
       const sign = a === 0 ? 1 : -1,
         z = sign * 0.162;
@@ -172,13 +185,13 @@ export class Simulation {
             .setCollisionGroups(0),
           link,
         );
-        this.joint(
+        const topJoint = this.joint(
           RAPIER.JointData.spherical(top, { x: 0, y: -length / 2, z: 0 }),
           this.body,
           link,
         );
         this.joint(RAPIER.JointData.spherical(bottom, { x: 0, y: length / 2, z: 0 }), axle, link);
-        this.links.push({ body: link, axle, top, bottom, length });
+        this.links.push({ body: link, axle, topJoint, top, bottom, length });
       }
       for (const side of [-1, 1]) {
         const top = new Vector3(side * 0.084, 0.065, z * 0.92),
@@ -324,9 +337,15 @@ export class Simulation {
     this.bodyColliders[1].setTranslationWrtParent({ x: 0, y: spec.bodyHeight, z: -0.035 });
     this.bodyColliders[1].setShape(
       new RAPIER.Cuboid(
-        this.tune.vehicle === 'c2' ? 0.065 : 0.094,
+        this.tune.vehicle === 'w3'
+          ? 0.098
+          : this.tune.vehicle === 'r1'
+            ? 0.094
+            : this.tune.vehicle === 'b4'
+              ? 0.06
+              : 0.065,
         this.tune.vehicle === 'c2' ? 0.035 : 0.04,
-        0.1,
+        this.tune.vehicle === 'w3' ? 0.2 : 0.1,
       ),
     );
     this.bodyColliders[3].setTranslationWrtParent({
@@ -335,6 +354,13 @@ export class Simulation {
       z: this.tune.batteryPosition,
     });
     this.bodyColliders[3].setMass(((0.34 * this.tune.capacity) / 2.2) * (this.tune.voltage / 7.4));
+    this.bodyColliders[5].setEnabled(this.tune.ballast > 0);
+    this.bodyColliders[5].setMass(this.tune.ballast);
+    this.bodyColliders[5].setTranslationWrtParent({ x: 0, y: 0.018, z: this.tune.ballastPosition });
+    this.links.forEach((link, i) => {
+      link.top.y = (i % 4 >= 2 ? 0.045 : 0.004) + this.tune.linkHeight;
+      link.topJoint.setAnchor1(link.top);
+    });
     this.body.recomputeMassPropertiesFromColliders();
     for (const collider of this.axleColliders)
       collider.setTranslationWrtParent({
@@ -368,8 +394,20 @@ export class Simulation {
     }
   }
   /** Recovery moves the entire constrained assembly; normal driving never writes body poses or velocities. */
-  reset(x = 0, z = 0, support = this.height(x, z)) {
-    const origin = new Vector3(x, support + 0.09, z);
+  reset(x = 0, z = 0, support?: number) {
+    const bed = Math.max(
+      this.height(x, z),
+      ...[-0.128, 0.128].flatMap((dx) => [-0.162, 0.162].map((dz) => this.height(x + dx, z + dz))),
+    );
+    support ??= recoverySupport(
+      this.world,
+      x,
+      z,
+      bed + 1,
+      new Set(this.parts.map((b) => b.handle)),
+      bed,
+    );
+    const origin = new Vector3(x, support + this.tune.radius + 0.031, z);
     this.body.setTranslation(origin, true);
     this.body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
     for (let a = 0; a < 2; a++) {
@@ -515,7 +553,13 @@ export class Simulation {
     this.wheels.forEach((w, i) => {
       w.omega = v(w.body.angvel()).sub(v(w.carrier.angvel())).dot(axes[i]);
     });
-    const mean = this.wheels.reduce((n, w) => n + w.omega, 0) / 4;
+    const factors = [
+      1 + this.tune.frontOverdrive,
+      1 + this.tune.frontOverdrive,
+      1 - this.tune.rearUnderdrive,
+      1 - this.tune.rearUnderdrive,
+    ];
+    const mean = this.wheels.reduce((n, w, i) => n + w.omega / factors[i], 0) / 4;
     const kv = this.tune.motorKind === 'brushed' ? 29700 / this.tune.turns : this.tune.kv;
     const kt = 60 / (2 * Math.PI * kv),
       ratio = this.ratio;
@@ -536,29 +580,6 @@ export class Simulation {
       this.driveshaftAngles[a] +=
         (this.wheels[a * 2].omega + this.wheels[a * 2 + 1].omega) * 0.5 * this.tune.axleRatio * dt;
     const brake = input.brake ? 0.35 : this.throttle === 0 ? this.tune.dragBrake * 0.17 : 0;
-    if (this.tune.differential === 'locked') {
-      // A bilateral angular impulse enforces equal driven speed. Reaction impulses conserve momentum.
-      for (const [a, b] of [
-        [0, 1],
-        [2, 3],
-        [0, 2],
-        [1, 3],
-      ]) {
-        const left = this.wheels[a],
-          right = this.wheels[b],
-          wa = v(left.body.angvel()).sub(v(left.carrier.angvel())).dot(axes[a]),
-          wb = v(right.body.angvel()).sub(v(right.carrier.angvel())).dot(axes[b]);
-        const correction = axes[b].clone().sub(axes[a]);
-        const inverse =
-          this.invInertia(left.body, axes[a]) +
-          this.invInertia(right.body, axes[b]) +
-          this.invInertia(this.body, correction);
-        const impulse = (wb - wa) / Math.max(1, inverse);
-        left.body.applyTorqueImpulse(axes[a].clone().multiplyScalar(impulse), true);
-        right.body.applyTorqueImpulse(axes[b].clone().multiplyScalar(-impulse), true);
-        this.body.applyTorqueImpulse(correction.multiplyScalar(impulse), true);
-      }
-    }
     this.wheels.forEach((w, i) => {
       // Smooth static braking and rolling drag are torques, never target chassis velocities.
       const rolling = w.contact ? w.surface.rolling * w.load * this.tune.radius : 0;
@@ -572,9 +593,55 @@ export class Simulation {
       const drag = clamp(resistanceTorque, -stopTorque, stopTorque);
       const electricalDamping = (kt * kt * ratio * ratio * 0.74) / (4 * resistance);
       w.torque =
-        totalTorque / 4 / (1 + electricalDamping * dt * this.invInertia(w.body, axes[i])) + drag;
+        totalTorque /
+          4 /
+          factors[i] /
+          (1 + (electricalDamping / factors[i] ** 2) * dt * this.invInertia(w.body, axes[i])) +
+        drag;
       this.torque(w.body, this.body, axes[i], w.torque, dt);
     });
+  }
+  private solveAxleCoupling() {
+    if (this.tune.differential !== 'locked') return;
+    const factors = [
+      1 + this.tune.frontOverdrive,
+      1 + this.tune.frontOverdrive,
+      1 - this.tune.rearUnderdrive,
+      1 - this.tune.rearUnderdrive,
+    ];
+    const axes = this.wheels.map((w) =>
+      new Vector3(1, 0, 0).applyQuaternion(q(w.carrier.rotation())),
+    );
+    // Project the gear constraints with physical, equal/opposite angular impulses.
+    // Include carrier inertia and combine gradients for shared axle bodies.
+    for (let sweep = 0; sweep < 6; sweep++)
+      for (const [a, b] of [
+        [0, 1],
+        [2, 3],
+        [0, 2],
+        [1, 3],
+      ]) {
+        const gradients = new Map<number, { body: RAPIER.RigidBody; axis: Vector3 }>();
+        for (const [body, axis] of [
+          [this.wheels[a].body, axes[a].clone().divideScalar(factors[a])],
+          [this.wheels[a].carrier, axes[a].clone().multiplyScalar(-1 / factors[a])],
+          [this.wheels[b].body, axes[b].clone().multiplyScalar(-1 / factors[b])],
+          [this.wheels[b].carrier, axes[b].clone().divideScalar(factors[b])],
+        ] as [RAPIER.RigidBody, Vector3][]) {
+          const existing = gradients.get(body.handle);
+          if (existing) existing.axis.add(axis);
+          else gradients.set(body.handle, { body, axis });
+        }
+        let velocity = 0,
+          inverse = 0;
+        for (const { body, axis } of gradients.values()) {
+          velocity += v(body.angvel()).dot(axis);
+          inverse += this.invInertia(body, axis);
+        }
+        const impulse = -velocity / Math.max(1e-9, inverse);
+        for (const { body, axis } of gradients.values())
+          body.applyTorqueImpulse(axis.multiplyScalar(impulse), true);
+      }
   }
   private readContacts(dt: number) {
     for (const [index, w] of this.wheels.entries()) {
@@ -617,10 +684,19 @@ export class Simulation {
         });
         rib.load = approach(rib.load, Math.min(100, ribLoad), 500, dt);
         load += rib.load;
+        const offSupport =
+          centre.clone().sub(w.point).dot(w.normal) > this.tune.radius + 0.0025 ||
+          v(w.body.linvel()).dot(w.normal) > 0.08;
         const target = found.length
           ? clamp(rib.load / ((this.tune.foam * softness) / 3), 0, 0.012)
-          : 0;
-        const compression = rib.compression + (target - rib.compression) * (1 - Math.exp(-dt * 14));
+          : offSupport
+            ? 0
+            : rib.compression;
+        // Viscoelastic load response; retain support through sub-millimetre solver gaps.
+        // The old fast radius/load feedback injected geometric contact energy at rest.
+        const compression =
+          rib.compression +
+          (target - rib.compression) * (1 - Math.exp(-dt * (offSupport && !found.length ? 18 : 2)));
         if (Math.abs(compression - rib.compression) > 0.00004) {
           rib.compression = compression;
           rib.collider.setShape(
@@ -639,7 +715,15 @@ export class Simulation {
       const compound =
           this.tune.compound === 'soft' ? 1.08 : this.tune.compound === 'trail' ? 0.93 : 0.76,
         sensitivity = clamp(Math.max(1, w.load) / 8, 0.1, 12) ** -0.065;
-      const mu = w.surface.mu * compound * sensitivity;
+      const tread =
+        this.tune.tread === 'trail'
+          ? w.surface.name === 'Gravel' ||
+            w.surface.name === 'Mud' ||
+            w.surface.name === 'Forest loam'
+            ? 1.06
+            : 0.96
+          : 1;
+      const mu = w.surface.mu * compound * sensitivity * tread;
       w.collider.setFriction(mu);
       w.ribs.forEach((r) => r.collider.setFriction(mu));
       const axis = new Vector3(1, 0, 0).applyQuaternion(q(w.carrier.rotation())),
@@ -658,6 +742,15 @@ export class Simulation {
         r.collider.setTranslationWrtParent({ x: r.x + w.sideFlex, y: 0, z: 0 }),
       );
     }
+    this.bodyScrape = 0;
+    if (this.speed > 0.015)
+      for (const bodyCollider of this.bodyColliders)
+        this.world.contactPairsWith(bodyCollider, (other) => {
+          this.world.contactPair(bodyCollider, other, (manifold) => {
+            for (let j = 0; j < manifold.numContacts(); j++)
+              this.bodyScrape += (Math.abs(manifold.contactImpulse(j)) / dt) * this.speed;
+          });
+        });
     this.contacts = this.wheels.filter((w) => w.contact).length;
     this.surface = this.wheels.find((w) => w.contact)?.surface.name ?? 'Airborne';
   }
@@ -670,6 +763,7 @@ export class Simulation {
     this.springForces(dt);
     this.world.timestep = dt;
     this.world.step(this.events);
+    this.solveAxleCoupling();
     this.wheels.forEach((w) => (w.lateralForce = 0));
     this.events.drainContactForceEvents((event) => {
       for (const w of this.wheels) {

@@ -1,8 +1,8 @@
 import { beforeAll, describe, it, expect } from 'vitest';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { Vector3 } from 'three';
-import { loadState, saveState, buyVehicle, sellVehicle, selectVehicle } from '../src/state';
-import { vehicleTune } from '../src/catalogue';
+import { loadState, saveState, selectVehicle } from '../src/state';
+import { vehicles, vehicleTune } from '../src/catalogue';
 import { CourseRun, courses } from '../src/courses';
 import { effectIntent, ParticlePool, type ContactSample } from '../src/environment-effects';
 import { graphicPresets, validateGraphics } from '../src/graphics';
@@ -29,27 +29,33 @@ const sample = (extra: Partial<ContactSample> = {}): ContactSample => ({
   ...extra,
 });
 describe('vehicle ownership and additive save migration', () => {
-  it('cannot buy without funds, duplicate a purchase or sell the starter; restores independent tunes', () => {
+  it('makes every vehicle available with zero points and retains independent tuning', () => {
     const state = fresh();
-    expect(buyVehicle(state, 'c2')).toBe(false);
-    state.credits = 1000;
+    expect(state.owned).toEqual(vehicles.map((v) => v.id));
+    expect(state.credits).toBe(0);
     state.tune.foam = 4200;
-    expect(buyVehicle(state, 'c2')).toBe(true);
-    expect(state.credits).toBe(400);
-    expect(buyVehicle(state, 'c2')).toBe(false);
-    expect(selectVehicle(state, 'c2')).toBe(true);
-    expect(state.tune.batteryHeight).toBe(0.045);
+    for (const vehicle of vehicles) {
+      expect(selectVehicle(state, vehicle.id)).toBe(true);
+      expect(state.tune.vehicle).toBe(vehicle.id);
+      expect(state.credits).toBe(0);
+    }
+    selectVehicle(state, 'c2');
     state.tune.foam = 900;
     selectVehicle(state, 'r1');
     expect(state.tune.foam).toBe(4200);
     selectVehicle(state, 'c2');
     expect(state.tune.foam).toBe(900);
-    expect(sellVehicle(state, 'r1')).toBe(false);
-    expect(sellVehicle(state, 'c2')).toBe(true);
-    expect(state.tune.vehicle).toBe('r1');
-    expect(state.credits).toBe(850);
-    expect(state.tune.foam).toBe(4200);
-    expect(selectVehicle(state, 'c2')).toBe(false);
+    const migrated = loadState({
+      getItem: () =>
+        JSON.stringify({
+          version: 1,
+          owned: ['r1'],
+          credits: 0,
+          tune: { vehicle: 'c2', foam: 3200 },
+        }),
+    });
+    expect(migrated.tune.vehicle).toBe('c2');
+    expect(migrated.owned).toEqual(vehicles.map((v) => v.id));
   });
   it('preserves legacy credits/builds/progress even when a new optional record is corrupt', () => {
     const state = loadState({
@@ -75,10 +81,9 @@ describe('vehicle ownership and additive save migration', () => {
     expect(state.graphics.preset).toBe('Low');
     expect(state.records['needle-point'].bestTime).toBe(45);
   });
-  it('round trips purchased profiles, mud, weather, course records and custom graphics', () => {
+  it('round trips freely selected profiles, mud, weather, course records and custom graphics', () => {
     const state = fresh();
     state.credits = 1000;
-    buyVehicle(state, 'c2');
     selectVehicle(state, 'c2');
     state.tune.sidewall = 1700;
     state.dirt.c2 = 0.6;

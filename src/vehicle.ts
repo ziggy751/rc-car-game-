@@ -16,6 +16,10 @@ export class Crawler {
   soilUniforms: SoilUniforms = {
     soil: { value: 0 },
     wet: { value: 0 },
+    zones: { value: new Float32Array(8) },
+    dust: { value: 0 },
+    wear: { value: 0 },
+    wheelCentres: { value: Array.from({ length: 4 }, () => new T.Vector3()) },
     vehicleInverse: { value: new T.Matrix4() },
   };
   battery = new T.Group();
@@ -23,6 +27,13 @@ export class Crawler {
   shell = new T.Group();
   mechanics = new T.Group();
   wheels: T.Group[] = [];
+  ballast = new T.Group();
+  treadMeshes: T.InstancedMesh[] = [];
+  treadPattern = 'rock';
+  tyreMeshes: T.Mesh[] = [];
+  tyreLODs: T.BufferGeometry[][] = [];
+  visualDetail = 2;
+  activeTread = '';
   axles: T.Group[] = [];
   springs: T.Group[] = [];
   links: T.Mesh[] = [];
@@ -43,7 +54,8 @@ export class Crawler {
       steel = metal('#79848a', 0.24, 0.9),
       red = metal('#b93f22', 0.3, 0.6),
       rubber = surfaceMaterial('rubber');
-    this.root.add(this.shell, this.mechanics, this.battery);
+    this.root.add(this.shell, this.mechanics, this.battery, this.ballast);
+    box(this.ballast, metal('#a98d4c', 0.48, 0.85), [0.05, 0.001, 0.05], [0, 0, 0]);
     const c = this.mechanics;
     // Continuous ladder chassis rails, shaped through their raised axle clearances.
     for (const x of [-0.067, 0.067]) {
@@ -56,7 +68,7 @@ export class Crawler {
         [x, 0.045, 0.15],
         [x, 0.015, 0.23],
       ];
-      if (this.vehicle === 'r1') mesh(railGeometry(rail), black, c);
+      if (this.vehicle === 'r1' || this.vehicle === 'w3') mesh(railGeometry(rail), black, c);
       else tube(c, black, rail, 0.0035);
       for (let z = -0.18; z < 0.2; z += 0.035) {
         const bolt = mesh(new T.CylinderGeometry(0.0023, 0.0023, 0.016, 6), steel, c, [x, 0.03, z]);
@@ -233,6 +245,12 @@ export class Crawler {
       new T.Vector2(0.03, -0.022),
     ];
     const tyre = mesh(new T.LatheGeometry(profile, 96), rubber, rotation);
+    this.tyreMeshes.push(tyre);
+    this.tyreLODs.push([
+      new T.LatheGeometry(profile, 24),
+      new T.LatheGeometry(profile, 48),
+      tyre.geometry,
+    ]);
     tyre.rotation.z = Math.PI / 2;
     tyre.customDepthMaterial = deformation.depth;
     const tread = new T.InstancedMesh(new T.BoxGeometry(0.013, 0.006, 0.012), rubber, 40 * 3);
@@ -247,6 +265,7 @@ export class Crawler {
         mat.compose(new T.Vector3(row * 0.014, Math.cos(a) * 0.057, -Math.sin(a) * 0.057), q, sc);
         tread.setMatrixAt(k++, mat);
       }
+    this.treadMeshes.push(tread);
     tread.castShadow = true;
     tread.customDepthMaterial = deformation.depth;
     rotation.add(tread);
@@ -335,6 +354,43 @@ export class Crawler {
     o.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize());
   }
   sync(sim: Simulation, pose: VehiclePose) {
+    this.ballast.visible = sim.tune.ballast > 0;
+    this.ballast.position.set(0, 0.018, sim.tune.ballastPosition);
+    this.ballast.scale.y = Math.max(0.01, sim.tune.ballast / (8500 * 0.05 * 0.05 * 0.001));
+    const treadKey = sim.tune.tread + this.visualDetail;
+    if (this.activeTread !== treadKey) {
+      this.activeTread = treadKey;
+      this.treadPattern = sim.tune.tread;
+      const count =
+          sim.tune.tread === 'trail'
+            ? [16, 24, 32][this.visualDetail]
+            : [20, 32, 40][this.visualDetail],
+        matrix = new T.Matrix4(),
+        rotation = new T.Quaternion();
+      for (const tread of this.treadMeshes) {
+        let index = 0;
+        for (let row = -1; row <= 1; row++)
+          for (let j = 0; j < count; j++) {
+            const a = ((j + (row === 0 ? 0.5 : 0)) * Math.PI * 2) / count;
+            rotation.setFromEuler(
+              new T.Euler(a, 0, row * (sim.tune.tread === 'trail' ? 0.55 : 0.3)),
+            );
+            matrix.compose(
+              new T.Vector3(row * 0.014, Math.cos(a) * 0.057, -Math.sin(a) * 0.057),
+              rotation,
+              new T.Vector3(
+                sim.tune.tread === 'trail' ? 1.2 : 1,
+                1,
+                sim.tune.tread === 'trail' ? 0.8 : 1,
+              ),
+            );
+            tread.setMatrixAt(index++, matrix);
+          }
+        tread.count = index;
+        tread.instanceMatrix.needsUpdate = true;
+      }
+    }
+
     this.root.position.copy(pose.body.position);
     this.root.quaternion.copy(pose.body.rotation);
     const inverse = pose.body.rotation.clone().invert();
@@ -342,6 +398,7 @@ export class Crawler {
     pose.wheels.forEach((wheel, i) => {
       const w = this.wheels[i];
       w.position.copy(local(wheel.position));
+      this.soilUniforms.wheelCentres.value[i].copy(w.position);
       w.quaternion.copy(inverse).multiply(wheel.rotation);
       w.children[0].rotation.set(0, 0, 0);
       w.scale.set(sim.tune.tyreWidth / 0.044, sim.tune.radius / 0.059, sim.tune.radius / 0.059);
@@ -404,6 +461,7 @@ export class Crawler {
         for (const m of Array.isArray(o.material) ? o.material : [o.material]) materials.add(m);
       }
     });
+    this.tyreLODs.flat().forEach((g) => geometries.add(g));
     geometries.forEach((g) => g.dispose());
     materials.forEach((m) => {
       for (const value of Object.values(m)) {
@@ -413,6 +471,11 @@ export class Crawler {
     });
     this.deformations.forEach((d) => d.depth.dispose());
     this.root.removeFromParent();
+  }
+  setVisualDetail(level: 0 | 1 | 2) {
+    if (this.visualDetail === level) return;
+    this.visualDetail = level;
+    this.tyreMeshes.forEach((m, i) => (m.geometry = this.tyreLODs[i][level]));
   }
   setTyres(radius: number) {
     this.radius = radius;

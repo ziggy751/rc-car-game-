@@ -1,10 +1,9 @@
 import { defaults, type Tune } from './dynamics/tuning';
-export type VehicleId = 'r1' | 'c2';
+export type VehicleId = 'r1' | 'c2' | 'w3' | 'b4';
 export type VehicleSpec = {
   id: VehicleId;
   name: string;
   category: string;
-  price: number;
   description: string;
   scale: string;
   wheelbase: number;
@@ -19,7 +18,6 @@ export const vehicles: VehicleSpec[] = [
     id: 'r1',
     name: 'R1 Fieldcraft',
     category: 'SCALE TRAIL / LADDER FRAME',
-    price: 0,
     scale: '1:10',
     wheelbase: 324,
     bodyMass: 0.32,
@@ -34,7 +32,6 @@ export const vehicles: VehicleSpec[] = [
     id: 'c2',
     name: 'C2 Needle',
     category: 'LCG COMPETITION / TUBE FRAME',
-    price: 600,
     scale: '1:10',
     wheelbase: 324,
     bodyMass: 0.16,
@@ -52,6 +49,58 @@ export const vehicles: VehicleSpec[] = [
       rearSpring: 45,
       ride: 0.065,
       body: true,
+    },
+  },
+  {
+    id: 'w3',
+    name: 'W3 Outrider',
+    category: 'EXPEDITION / PORTAL WAGON',
+    scale: '1:10',
+    wheelbase: 324,
+    bodyMass: 0.46,
+    bodyHeight: 0.145,
+    chassisMass: 1.08,
+    paint: '#a5afa0',
+    description:
+      'A closed four-door utility wagon with a ribbed cargo roof, rear-mounted spare and portal housings. A heavier shell and forward battery give it a distinct balance.',
+    preset: {
+      paint: '#a5afa0',
+      axleType: 'portal',
+      batteryPosition: 0.055,
+      batteryHeight: 0.055,
+      spring: 65,
+      rearSpring: 60,
+      foam: 3100,
+      compound: 'trail',
+      gearRatio: 22,
+    },
+  },
+  {
+    id: 'b4',
+    name: 'B4 Switchback',
+    category: 'TECHNICAL BUGGY / PORTAL AXLES',
+    scale: '1:10',
+    wheelbase: 324,
+    bodyMass: 0.2,
+    bodyHeight: 0.105,
+    chassisMass: 0.94,
+    paint: '#518a8e',
+    description:
+      'A single-seat buggy with a narrow cockpit, swept nose and exposed rear service cage. Larger supported tyres, long shock stroke and portal clearance suit technical boulders.',
+    preset: {
+      paint: '#518a8e',
+      axleType: 'portal',
+      batteryHeight: 0.045,
+      batteryPosition: -0.025,
+      radius: 0.063,
+      tyreWidth: 0.049,
+      spring: 58,
+      rearSpring: 52,
+      travel: 0.08,
+      rearTravel: 0.08,
+      foam: 1900,
+      sidewall: 2600,
+      gearRatio: 26,
     },
   },
 ];

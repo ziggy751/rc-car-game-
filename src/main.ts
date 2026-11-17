@@ -6,6 +6,8 @@ import '@fontsource/manrope/latin-500.css';
 import '@fontsource/manrope/latin-800.css';
 import * as T from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
+import { ContactAudio } from './contact-audio';
+import { validateCondition, averageMud } from './soiling';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { Crawler } from './vehicle';
@@ -65,6 +67,8 @@ async function boot() {
     x > 6 && x < 16 && z > -13 && z < -1 ? 0 : groundHeight(x, z);
   const surfaceAt = (p: RAPIER.Vector, c: RAPIER.Collider) => {
     const known = park.materialSurfaces.get(c.handle) ?? testArea.materials.get(c.handle);
+    const poolLevel = testArea.waterLevel(p.x, p.z);
+    if (poolLevel !== null && p.y < poolLevel) return surfaces['Wet rock'];
     let surface =
       known ??
       (Math.abs(p.z - 3.7) < 0.43
@@ -95,10 +99,16 @@ async function boot() {
   fixture.castShadow = true;
   fixture.receiveShadow = true;
   scene.add(fixture);
-  const effects = new EnvironmentEffects(heightAt, (p) =>
-    Math.abs(p.z - 3.7) < 0.39 && Math.abs(p.x) < 12.5 ? park.water.position.y : null,
+  const effects = new EnvironmentEffects(
+    heightAt,
+    (p) =>
+      testArea.waterLevel(p.x, p.z) ??
+      (Math.abs(p.z - 3.7) < 0.39 && Math.abs(p.x) < 12.5 ? park.water.position.y : null),
   );
-  effects.soil = state.dirt[state.tune.vehicle] ?? 0;
+  effects.condition = validateCondition(
+    state.condition[state.tune.vehicle],
+    state.dirt[state.tune.vehicle] ?? 0,
+  );
   scene.add(effects.group);
   const orbit = new OrbitControls(camera, renderer.domElement);
   orbit.enableDamping = true;
@@ -111,14 +121,15 @@ async function boot() {
     keys = new Set<string>();
   let sceneMode: 'trail' | 'garage' | 'workshop' = 'garage',
     run: CourseRun | null = null,
-    camMode = 0,
+    camMode = state.preferences.camera,
     debug = false,
     previewSteer = 0,
     last = performance.now(),
     lastRender = 0,
     fpsTime = 0,
     renderFrames = 0,
-    saveTime = 0;
+    saveTime = 0,
+    cleanPreview = false;
   const debugLines = new T.LineSegments(
     new T.BufferGeometry(),
     new T.LineBasicMaterial({ color: '#d8c087', depthTest: false }),
@@ -141,7 +152,7 @@ async function boot() {
     car.springs.forEach(batchStatic);
     for (const x of [-0.07, 0.07]) {
       const lamp = new T.SpotLight('#ffe1a0', 0.28, 2.5, 0.48, 0.5, 2);
-      lamp.position.set(x, id === 'r1' ? 0.098 : 0.064, 0.23);
+      lamp.position.set(x, id === 'r1' || id === 'w3' ? 0.098 : 0.064, 0.23);
       lamp.target.position.set(x, 0.01, 1.4);
       lamp.castShadow = true;
       lamp.shadow.mapSize.set(512, 512);
@@ -166,6 +177,7 @@ async function boot() {
   function persist() {
     state.vehicleTunes[state.tune.vehicle] = { ...state.tune };
     state.dirt[sim.tune.vehicle] = effects.soil;
+    state.condition[sim.tune.vehicle] = validateCondition(effects.condition);
     if (!saveState(state)) ui.toast('Storage is unavailable. Changes last for this session only.');
   }
   function applyTune() {
@@ -205,7 +217,6 @@ async function boot() {
     persist();
   };
   ui.onVehicle = (id) => {
-    if (!state.owned.includes(id)) return;
     persist();
     selectVehicle(state, id);
     const p = sim.body.translation();
@@ -213,22 +224,27 @@ async function boot() {
     sim = new Simulation(world, state.tune, { heightAt, surfaceAt });
     sim.reset(p.x, p.z);
     sim.paused = ui.mode !== 'trail';
-    effects.soil = state.dirt[id] ?? 0;
-    effects.wet = 0;
+    effects.condition = validateCondition(state.condition[id], state.dirt[id] ?? 0);
     run = null;
     buildCar(id);
     studio(ui.mode === 'workshop' ? 'workshop' : 'garage', id);
     applyTune();
   };
+  ui.onTestDrive = () => ui.onTestStation(0);
   ui.onPreviewVehicle = (id) => {
     studio('garage', id);
   };
+  ui.onDirtPreview = (clean) => {
+    cleanPreview = clean;
+  };
   ui.onClean = () => {
+    cleanPreview = false;
     effects.clean();
     state.dirt[state.tune.vehicle] = 0;
     persist();
   };
   ui.onMode = (mode) => {
+    cleanPreview = false;
     sim.paused = mode !== 'trail';
     clock.reset();
     previewClock.reset();
@@ -293,7 +309,18 @@ async function boot() {
       );
     sim.reset(p.x, p.z, support);
     run?.recover();
+    run?.reposition(p.x, p.z);
     ui.toast(run ? 'Recovered · +20 seconds and a precision penalty.' : 'Vehicle recovered.');
+  };
+  ui.onCheckpoint = () => {
+    if (ui.mode !== 'trail') return;
+    const p = run?.checkpoint() ?? { x: trails[ui.activeTrail].x, z: trails[ui.activeTrail].z };
+    sim.reset(p.x, p.z);
+    if (run) {
+      run.recover();
+      run.reposition(p.x, p.z);
+    }
+    ui.toast(run ? 'Returned to last gate · +20 seconds.' : 'Returned to trailhead · free roam.');
   };
   ui.onPreviewSteer = (value) => {
     previewSteer = value;
@@ -334,6 +361,8 @@ async function boot() {
   ui.onCamera = () => {
     if (ui.mode !== 'trail') return;
     camMode = (camMode + 1) % 6;
+    state.preferences.camera = camMode;
+    persist();
     orbit.enabled = camMode === 3;
     orbit.target.copy(car.root.position).add(new T.Vector3(0, 0.12, 0));
     document.getElementById('camera')!.innerHTML = '<kbd>C</kbd> ' + cameraNames[camMode];
@@ -341,6 +370,10 @@ async function boot() {
   ui.onPhoto = () => {
     if (!['trail', 'garage', 'workshop'].includes(ui.mode)) return;
     ui.photo = !ui.photo;
+    (document.getElementById('photo-weather') as HTMLSelectElement).value = state.weather;
+    (document.getElementById('photo-dof') as HTMLInputElement).checked = state.graphics.dof;
+    photoFocus = camera.position.distanceTo(car.root.position);
+    (document.getElementById('photo-focus') as HTMLInputElement).value = String(photoFocus);
     document.body.classList.toggle('photo', ui.photo);
     sim.paused = ui.photo || ui.mode !== 'trail';
     clock.reset();
@@ -348,17 +381,31 @@ async function boot() {
     orbit.target.copy(car.root.position).add(new T.Vector3(0, 0.12, 0));
     keys.clear();
   };
+  document.getElementById('photo-weather')!.onchange = (e) => {
+    state.weather = (e.target as HTMLSelectElement).value as typeof state.weather;
+    ui.onWeather();
+  };
+  document.getElementById('photo-dof')!.onchange = (e) => {
+    state.graphics.dof = (e.target as HTMLInputElement).checked;
+    state.graphics.preset = 'Custom';
+    ui.onGraphics();
+  };
+  document.getElementById('photo-focus')!.oninput = (e) => {
+    photoFocus = Number((e.target as HTMLInputElement).value);
+  };
   ui.onDebug = () => {
     debug = !debug;
     document.getElementById('physics-debug')!.hidden = !debug;
   };
   document.getElementById('download-photo')!.onclick = () => {
-    render.render(camera.position.distanceTo(orbit.target));
+    render.render(ui.photo ? photoFocus : camera.position.distanceTo(orbit.target));
     const a = document.createElement('a');
     a.download = 'ridgebound-' + Date.now() + '.png';
     a.href = renderer.domElement.toDataURL('image/png');
     a.click();
   };
+  let contactAudio: ContactAudio | null = null;
+  let photoFocus = 1;
   let audio: AudioContext | null = null,
     osc: OscillatorNode | null = null,
     gain: GainNode | null = null,
@@ -367,6 +414,7 @@ async function boot() {
   function sound() {
     if (!audio) {
       audio = new AudioContext();
+      contactAudio = new ContactAudio(audio);
       osc = audio.createOscillator();
       osc.type = 'triangle';
       gain = audio.createGain();
@@ -486,7 +534,7 @@ async function boot() {
       };
       persist();
       ui.toast(
-        `${course.name} complete · ${run.time.toFixed(1)} s · ${run.score} points · +${reward} credits`,
+        `${course.name} complete · ${run.time.toFixed(1)} s · ${run.score} points · +${reward} challenge points`,
       );
     } else if (run.gate !== oldGate) ui.toast('Gate ' + run.gate + ' / ' + run.course.gates.length);
   }
@@ -546,6 +594,9 @@ async function boot() {
     } else car.sync(sim, sim.pose(alpha));
     car.root.updateMatrixWorld(true);
     car.soilUniforms.vehicleInverse.value.copy(car.root.matrixWorld).invert();
+    car.setVisualDetail(graphics.wheelDetail);
+    if (!graphics.tyreDeformation)
+      car.deformations.forEach((d) => (d.uniforms.tyreDeflection.value = 0));
     const active = indoor ? preview : sim;
     car.paint.color.set(active.tune.paint);
     car.shell.visible = active.tune.body;
@@ -554,9 +605,16 @@ async function boot() {
       active.tune.batteryHeight - 0.066,
       active.tune.batteryPosition + 0.119,
     );
-    car.soilUniforms.soil.value =
-      graphics.accumulation && carId === state.tune.vehicle ? effects.soil : 0;
-    car.soilUniforms.wet.value = graphics.accumulation ? effects.wet : 0;
+    const finish =
+      carId === state.tune.vehicle
+        ? effects.condition
+        : validateCondition(state.condition[carId], state.dirt[carId] ?? 0);
+    const showDirt = graphics.accumulation && !cleanPreview;
+    car.soilUniforms.soil.value = showDirt ? averageMud(finish) : 0;
+    car.soilUniforms.wet.value = showDirt ? finish.wet : 0;
+    car.soilUniforms.zones.value.set(showDirt ? finish.mud : Array(8).fill(0));
+    car.soilUniforms.dust.value = showDirt ? finish.dust : 0;
+    car.soilUniforms.wear.value = state.preferences.visualWear && !cleanPreview ? finish.scuffs : 0;
     park.group.visible = !indoor;
     testArea.group.visible = !indoor;
     showroom.group.visible = sceneMode === 'garage';
@@ -618,13 +676,21 @@ async function boot() {
     if (!graphics.fpsLimit || now - lastRender >= 1000 / graphics.fpsLimit - 0.5) {
       render.observe((now - lastRender) / 1000 || dt, state.graphics);
       render.render(
-        camera.position.distanceTo(indoor || ui.photo || camMode === 3 ? orbit.target : target),
+        ui.photo
+          ? photoFocus
+          : camera.position.distanceTo(indoor || camMode === 3 ? orbit.target : target),
       );
       lastRender = now;
       renderFrames++;
     }
     if (audio && osc && gain && servoGain) {
       const enabled = state.tune.audio && ui.mode === 'trail' && !ui.photo;
+      contactAudio?.update(
+        [0, 1, 2, 3].map((i) => effects.sample(sim, i)),
+        sim.bodyScrape,
+        enabled,
+        !indoor,
+      );
       gain.gain.setTargetAtTime(
         enabled
           ? Math.min(0.025, 0.003 + sim.motorCurrent * 0.006) *

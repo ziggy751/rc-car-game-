@@ -124,6 +124,13 @@ export class CourseRun {
   recover() {
     this.recoveries++;
   }
+  checkpoint() {
+    const point = this.gate ? this.course.gates[this.gate - 1] : [this.course.x, this.course.z];
+    return { x: point[0], z: point[1] };
+  }
+  reposition(x: number, z: number) {
+    this.previous = { x, z };
+  }
   update(x: number, z: number, dt: number) {
     if (this.finished) return false;
     this.elapsed += dt;

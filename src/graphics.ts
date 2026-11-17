@@ -1,6 +1,9 @@
 export type Graphics = {
   preset: 'Low' | 'Medium' | 'High' | 'Ultra' | 'Auto' | 'Custom';
   scale: number;
+  textureSize: 128 | 256 | 512 | 1024;
+  wheelDetail: 0 | 1 | 2;
+  tyreDeformation: boolean;
   shadows: 0 | 1 | 2 | 3;
   vegetation: number;
   particles: number;
@@ -21,6 +24,9 @@ export type Graphics = {
 export const graphicPresets: Record<'Low' | 'Medium' | 'High' | 'Ultra', Graphics> = {
   Low: {
     preset: 'Low',
+    textureSize: 128,
+    wheelDetail: 0,
+    tyreDeformation: true,
     scale: 0.75,
     shadows: 0,
     vegetation: 0.35,
@@ -41,6 +47,9 @@ export const graphicPresets: Record<'Low' | 'Medium' | 'High' | 'Ultra', Graphic
   },
   Medium: {
     preset: 'Medium',
+    textureSize: 256,
+    wheelDetail: 1,
+    tyreDeformation: true,
     scale: 1,
     shadows: 1,
     vegetation: 0.6,
@@ -61,6 +70,9 @@ export const graphicPresets: Record<'Low' | 'Medium' | 'High' | 'Ultra', Graphic
   },
   High: {
     preset: 'High',
+    textureSize: 512,
+    wheelDetail: 2,
+    tyreDeformation: true,
     scale: 1,
     shadows: 2,
     vegetation: 0.85,
@@ -81,6 +93,9 @@ export const graphicPresets: Record<'Low' | 'Medium' | 'High' | 'Ultra', Graphic
   },
   Ultra: {
     preset: 'Ultra',
+    textureSize: 1024,
+    wheelDetail: 2,
+    tyreDeformation: true,
     scale: 1.25,
     shadows: 3,
     vegetation: 1,
@@ -125,6 +140,9 @@ export function validateGraphics(raw: any, legacy = 'High'): Graphics {
   g.exposure = clamp(g.exposure, 0.65, 1.5);
   g.anisotropy = clamp(g.anisotropy, 1, 16);
   g.drawDistance = clamp(g.drawDistance, 25, 160);
+  if ([128, 256, 512, 1024].includes(raw?.textureSize)) g.textureSize = raw.textureSize;
+  if ([0, 1, 2].includes(raw?.wheelDetail)) g.wheelDetail = raw.wheelDetail;
+  if (typeof raw?.tyreDeformation === 'boolean') g.tyreDeformation = raw.tyreDeformation;
   if ([0, 1, 2, 3].includes(raw?.shadows)) g.shadows = raw.shadows;
   if ([0, 30, 60, 90, 120].includes(raw?.fpsLimit)) g.fpsLimit = raw.fpsLimit;
   for (const key of [

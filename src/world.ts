@@ -403,7 +403,11 @@ export class Park {
       ? new Uint32Array(geo.index.array)
       : Uint32Array.from({ length: positions.length / 3 }, (_, i) => i);
     const collider = this.physics.createCollider(
-      RAPIER.ColliderDesc.trimesh(positions, indices).setFriction(1),
+      RAPIER.ColliderDesc.trimesh(
+        positions,
+        indices,
+        RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES | RAPIER.TriMeshFlags.DELETE_DEGENERATE_TRIANGLES,
+      ).setFriction(1),
     );
     this.colliders.push(collider);
     if (surface) this.materialSurfaces.set(collider.handle, surface);

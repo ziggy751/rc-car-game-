@@ -125,6 +125,15 @@ export class Rendering {
           const t = (material as any)[key] as T.Texture | null;
           if (t && !visited.has(t)) {
             visited.add(t);
+            if (t.userData.sourceCanvas && t.image.width !== g.textureSize) {
+              const canvas = document.createElement('canvas');
+              canvas.width = canvas.height = g.textureSize;
+              canvas
+                .getContext('2d')!
+                .drawImage(t.userData.sourceCanvas, 0, 0, g.textureSize, g.textureSize);
+              t.image = canvas;
+            }
+
             t.anisotropy = Math.min(g.anisotropy, this.renderer.capabilities.getMaxAnisotropy());
             t.needsUpdate = true;
           }

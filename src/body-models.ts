@@ -77,7 +77,7 @@ export function buildBody(s: T.Group, paint: T.MeshPhysicalMaterial, id: Vehicle
       rod(s, black, [x, 0.045, z], [x, 0.112, z], 0.002);
       mesh(new T.TorusGeometry(0.003, 0.00065, 5, 12), steel, s, [x, 0.115, z]);
     }
-  if (id === 'r1') {
+  if (id === 'r1' || id === 'w3') {
     // Thin hard-shell panels, open arches, short overhangs and a low two-seat cab.
     for (const side of [-1, 1]) {
       const shape = new T.Shape();
@@ -272,10 +272,34 @@ export function buildBody(s: T.Group, paint: T.MeshPhysicalMaterial, id: Vehicle
       box(s, red, [0.003, 0.029, 0.002], [x, 0.068, -0.033]);
     }
   }
+  if (id === 'w3') buildWagon(s, paint, black, steel, glass);
+  if (id === 'b4') buildBuggy(s, paint, black, steel, carbon);
+  // Panel seams, hood hinges and radiator louvers remain visible up close.
+  for (const side of [-1, 1]) {
+    for (let j = 0; j < 6; j++)
+      box(
+        s,
+        black,
+        [0.022, 0.001, 0.002],
+        [side * 0.054, id === 'r1' || id === 'w3' ? 0.13 : 0.084, 0.085 + j * 0.007],
+      );
+    for (const z of [0.09, 0.185])
+      box(
+        s,
+        steel,
+        [0.006, 0.002, 0.012],
+        [side * 0.084, id === 'r1' || id === 'w3' ? 0.13 : 0.083, z],
+      );
+  }
   // Shared miniature grille, machined winch, shackles and LEDs.
-  const grilleY = id === 'r1' ? 0.092 : 0.056,
-    grilleZ = id === 'r1' ? 0.214 : 0.202;
-  rounded([id === 'r1' ? 0.181 : 0.152, 0.048, 0.005], [0, grilleY, grilleZ], paint, 0.002);
+  const grilleY = id === 'r1' || id === 'w3' ? 0.092 : 0.056,
+    grilleZ = id === 'r1' || id === 'w3' ? 0.214 : 0.202;
+  rounded(
+    [id === 'r1' || id === 'w3' ? 0.181 : 0.152, 0.048, 0.005],
+    [0, grilleY, grilleZ],
+    paint,
+    0.002,
+  );
   for (let j = 0; j < 7; j++)
     rounded([0.006, 0.03, 0.003], [-0.042 + j * 0.014, grilleY, grilleZ + 0.004], black, 0.0015);
   for (const x of [-0.07, 0.07]) {
@@ -327,7 +351,7 @@ export function buildBody(s: T.Group, paint: T.MeshPhysicalMaterial, id: Vehicle
     ]);
     shackle.rotation.z = 0.4;
   }
-  const lightY = id === 'r1' ? 0.189 : 0.143;
+  const lightY = id === 'r1' || id === 'w3' ? 0.189 : 0.143;
   box(s, black, [0.13, 0.009, 0.009], [0, lightY, 0.022]);
   for (let j = 0; j < 10; j++)
     box(
@@ -337,7 +361,7 @@ export function buildBody(s: T.Group, paint: T.MeshPhysicalMaterial, id: Vehicle
       [-0.057 + j * 0.0127, lightY, 0.028],
     );
   // True interior details and 540-compatible service hardware, shared scale.
-  if (id === 'r1') {
+  if (id === 'r1' || id === 'w3') {
     box(s, black, [0.173, 0.013, 0.024], [0, 0.121, 0.027]);
     for (const x of [-0.044, 0.044]) {
       rounded([0.036, 0.009, 0.041], [x, 0.092, -0.035], black);
@@ -354,4 +378,141 @@ export function buildBody(s: T.Group, paint: T.MeshPhysicalMaterial, id: Vehicle
   }
   for (const x of [-0.083, 0.083]) for (const z of [-0.157, 0.15]) bolt(x, 0.065, z);
   rod(s, black, [0.071, 0.089, -0.17], [0.072, 0.215, -0.17], 0.00065);
+}
+
+/** Full rear cabin, cargo glazing, ribbed roof and a treaded tailgate spare distinguish the expedition wagon. */
+function buildWagon(
+  s: T.Group,
+  paint: T.MeshPhysicalMaterial,
+  black: T.Material,
+  steel: T.Material,
+  glass: T.Material,
+) {
+  mesh(new RoundedBoxGeometry(0.19, 0.005, 0.16, 3, 0.003), paint, s, [0, 0.179, -0.175]);
+  for (const side of [-1, 1]) {
+    panel(s, paint, [
+      [side * 0.099, 0.088, -0.133],
+      [side * 0.099, 0.139, -0.133],
+      [side * 0.095, 0.174, -0.134],
+      [side * 0.095, 0.174, -0.242],
+      [side * 0.099, 0.088, -0.242],
+    ]);
+    panel(s, glass, [
+      [side * 0.0995, 0.138, -0.142],
+      [side * 0.096, 0.17, -0.142],
+      [side * 0.096, 0.17, -0.232],
+      [side * 0.0995, 0.138, -0.232],
+    ]);
+    for (const z of [-0.14, -0.195, -0.239])
+      rod(s, black, [side * 0.101, 0.134, z], [side * 0.096, 0.176, z], 0.0016);
+    rod(s, black, [side * 0.102, 0.132, -0.14], [side * 0.102, 0.132, -0.24], 0.0018);
+    box(s, black, [0.004, 0.004, 0.021], [side * 0.103, 0.12, -0.18]);
+    for (let j = 0; j < 4; j++)
+      rod(
+        s,
+        black,
+        [side * (0.035 + j * 0.014), 0.184, -0.132],
+        [side * (0.035 + j * 0.014), 0.184, -0.239],
+        0.0013,
+      );
+  }
+  panel(s, paint, [
+    [-0.099, 0.09, -0.245],
+    [0.099, 0.09, -0.245],
+    [0.095, 0.175, -0.245],
+    [-0.095, 0.175, -0.245],
+  ]);
+  panel(s, glass, [
+    [-0.084, 0.136, -0.247],
+    [0.084, 0.136, -0.247],
+    [0.082, 0.168, -0.247],
+    [-0.082, 0.168, -0.247],
+  ]);
+  const spare = new T.Group();
+  spare.position.set(0.028, 0.121, -0.259);
+  s.add(spare);
+  const rubber = metal('#242824', 0.98, 0);
+  mesh(new T.TorusGeometry(0.04, 0.013, 14, 48), rubber, spare);
+  mesh(new T.CylinderGeometry(0.028, 0.028, 0.016, 32), steel, spare).rotation.x = Math.PI / 2;
+  for (let j = 0; j < 36; j++) {
+    const a = (j * Math.PI) / 18;
+    const lug = box(
+      spare,
+      rubber,
+      [0.009, 0.007, 0.022],
+      [Math.cos(a) * 0.052, Math.sin(a) * 0.052, 0],
+    );
+    lug.rotation.z = a - Math.PI / 2;
+  }
+  for (let j = 0; j < 6; j++) {
+    const a = (j * Math.PI) / 3;
+    rod(
+      spare,
+      black,
+      [Math.cos(a) * 0.009, Math.sin(a) * 0.009, -0.013],
+      [Math.cos(a) * 0.026, Math.sin(a) * 0.026, -0.013],
+      0.002,
+    );
+  }
+  for (const x of [-0.072, 0.072]) rod(s, black, [x, 0.055, -0.248], [x, 0.055, -0.273], 0.003);
+  rod(s, black, [-0.105, 0.055, -0.275], [0.105, 0.055, -0.275], 0.004);
+}
+/** A narrow one-seat cockpit and rear service hoop are independent geometry on the competition platform. */
+function buildBuggy(
+  s: T.Group,
+  paint: T.MeshPhysicalMaterial,
+  black: T.Material,
+  steel: T.Material,
+  carbon: T.Material,
+) {
+  // Replace the shared two-seat shell with this dedicated buggy cage.
+  s.clear();
+  for (const side of [-1, 1]) {
+    tube(
+      s,
+      black,
+      [
+        [side * 0.075, 0.02, -0.22],
+        [side * 0.07, 0.07, -0.16],
+        [side * 0.042, 0.13, -0.06],
+        [side * 0.041, 0.13, 0.025],
+        [side * 0.068, 0.047, 0.16],
+        [side * 0.06, 0.025, 0.23],
+      ],
+      0.0034,
+    );
+    rod(s, black, [side * 0.075, 0.02, -0.22], [side * 0.069, 0.045, 0.17], 0.003);
+    rod(s, black, [side * 0.073, 0.04, -0.18], [side * 0.042, 0.13, -0.06], 0.0028);
+    panel(s, paint, [
+      [side * 0.068, 0.03, -0.12],
+      [side * 0.055, 0.075, -0.08],
+      [side * 0.05, 0.077, 0.028],
+      [side * 0.068, 0.037, 0.09],
+    ]);
+    for (const z of [-0.09, -0.04, 0.01])
+      mesh(new T.SphereGeometry(0.0017, 6, 5), steel, s, [side * 0.066, 0.047, z]);
+  }
+  for (const z of [-0.06, 0.025]) rod(s, black, [-0.042, 0.13, z], [0.042, 0.13, z], 0.0035);
+  panel(s, carbon, [
+    [-0.044, 0.134, -0.065],
+    [0.044, 0.134, -0.065],
+    [0.043, 0.134, 0.031],
+    [-0.043, 0.134, 0.031],
+  ]);
+  panel(s, paint, [
+    [-0.065, 0.049, 0.1],
+    [0.065, 0.049, 0.1],
+    [0.047, 0.055, 0.22],
+    [-0.047, 0.055, 0.22],
+  ]);
+  mesh(new RoundedBoxGeometry(0.039, 0.012, 0.044, 3, 0.003), black, s, [0, 0.045, -0.015]);
+  mesh(new RoundedBoxGeometry(0.041, 0.045, 0.01, 3, 0.003), black, s, [0, 0.072, -0.04]);
+  for (const x of [-0.009, 0.009])
+    box(s, metal('#b25e37', 0.8, 0), [0.004, 0.037, 0.003], [x, 0.074, -0.033]);
+  rod(s, black, [-0.071, 0.055, -0.17], [0.071, 0.055, -0.17], 0.003);
+  rod(s, black, [-0.071, 0.055, -0.17], [0.04, 0.13, -0.06], 0.0027);
+  rod(s, black, [0.071, 0.055, -0.17], [-0.04, 0.13, -0.06], 0.0027);
+  box(s, carbon, [0.105, 0.004, 0.061], [0, 0.03, -0.184]);
+  for (let j = 0; j < 5; j++)
+    rod(s, steel, [-0.045, 0.034, -0.21 + j * 0.01], [0.045, 0.034, -0.21 + j * 0.01], 0.0013);
 }

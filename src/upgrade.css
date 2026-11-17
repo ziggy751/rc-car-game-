@@ -610,3 +610,63 @@ body[data-mode='menu'] .vignette {
     display: none;
   }
 }
+.finish-comparison {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+}
+.finish-comparison button {
+  flex: 1;
+  border: 1px solid #c6cfa644;
+  padding: 9px;
+  font-size: 9px;
+  border-radius: 3px;
+}
+.selection-panel > .primary {
+  margin-bottom: 14px;
+  font-size: 11px;
+}
+#photo-tools {
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 95%;
+  justify-content: center;
+}
+#photo-tools label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 9px;
+}
+#photo-tools select {
+  padding: 6px;
+  background: #243528;
+  color: #ecedd7;
+  border: 1px solid #b7c4a333;
+}
+#photo-focus {
+  width: 90px;
+}
+#hud-checkpoint {
+  font-size: 8px;
+}
+@media (max-width: 700px) {
+  #hud-checkpoint {
+    display: none;
+  }
+  #photo-tools {
+    width: 96%;
+    padding: 10px;
+    gap: 8px;
+    bottom: 15px;
+  }
+  #photo-tools > span {
+    max-width: none;
+    width: 100%;
+    text-align: center;
+  }
+  #photo-focus {
+    width: 65px;
+  }
+}

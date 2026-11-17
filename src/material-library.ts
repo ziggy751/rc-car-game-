@@ -25,7 +25,7 @@ function noise(x: number, y: number, period: number) {
 }
 export function pbrMaps(kind: MaterialKind) {
   if (cache.has(kind)) return cache.get(kind)!;
-  const size = 512,
+  const size = 1024,
     heights = new Float32Array(size * size),
     albedo = new Uint8ClampedArray(size * size * 4),
     rough = new Uint8ClampedArray(size * size * 4),
@@ -103,6 +103,7 @@ export function pbrMaps(kind: MaterialKind) {
     tex.colorSpace = srgb ? T.SRGBColorSpace : T.NoColorSpace;
     tex.anisotropy = 8;
     tex.userData.sharedPBR = true;
+    tex.userData.sourceCanvas = canvas;
     return tex;
   };
   const maps = {

@@ -1,5 +1,8 @@
 # Graphics, vehicles and environmental interaction upgrade
 
+> Historical report for `24ad909`. See [the current open-garage and realism upgrade](OPEN_GARAGE_REALISM.md) for free access, four vehicles, stability corrections and new environmental systems.
+
+
 ## Reference audit
 
 Both split graphics archives were extracted and the instructions in each were read. There are **32 PNG files across five image folders**, including multi-panel reference sheets. Every file was decoded and examined in the five contact sheets; tyre contact, exposed chassis, garage, material and weather details were also examined at full image size. See [manifest with dimensions and SHA-256 hashes](graphics-references/manifest.json) and [contact sheets](graphics-references/). These images are art direction, not dimensional engineering data or runtime textures. The bundled instructions explicitly describe the images as AI-generated references.

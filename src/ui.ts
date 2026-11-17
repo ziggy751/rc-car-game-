@@ -1,7 +1,6 @@
 import type { Save } from './state';
 import type { Tune } from './physics';
-import { vehicles, vehicleSpec, tuningPresets, type VehicleId } from './catalogue';
-import { buyVehicle, sellVehicle } from './state';
+import { vehicles, vehicleSpec, vehicleTune, tuningPresets, type VehicleId } from './catalogue';
 import { graphicPresets, type Graphics } from './graphics';
 import { trails } from './world';
 import { testStations } from './test-area';
@@ -18,6 +17,8 @@ export class UI {
   onGraphics = () => {};
   onWeather = () => {};
   onClean = () => {};
+  onTestDrive = () => {};
+  onDirtPreview: (clean: boolean) => void = () => {};
   onFreeRoam = () => {};
   onPreviewPose: (pose: string) => void = () => {};
   onPreviewSteer: (value: number) => void = () => {};
@@ -27,6 +28,7 @@ export class UI {
   onMode: (mode: Mode) => void = () => {};
   onTune: () => void = () => {};
   onRecover = () => {};
+  onCheckpoint = () => {};
   onTeleport: (i: number) => void = () => {};
   onCamera = () => {};
   onStart = () => {};
@@ -43,20 +45,21 @@ export class UI {
  <div id="loading"><span class="brand">△ RIDGEBOUND</span><span>Preparing the trail<span class="dots">…</span></span></div>
  <header><button class="logo" aria-label="Explore Ridgebound"><svg viewBox="0 0 44 35" aria-hidden="true"><path d="M2 30 17 4l9 16 5-9 11 19H2m9 0 9-15 9 15M17 4l5 11"/></svg><span>RIDGEBOUND<small>THE RC CRAWLING EXPERIENCE</small></span></button>
  <nav aria-label="Main navigation"><button data-mode="home" class="active">Home</button><button data-mode="garage">Garage</button><button data-mode="workshop">Tuning</button><button data-mode="map">Trails</button></nav>
- <div class="header-tools"><span class="credits"><i></i> <b id="credits">0</b> TRAIL CREDITS</span><button class="icon" id="sound" aria-label="Toggle sound" title="Toggle sound">♫</button><button class="icon" data-mode="settings" aria-label="Settings" title="Settings">⚙</button></div></header>
+ <div class="header-tools"><span class="credits"><i></i> <b id="credits">0</b> CHALLENGE POINTS</span><button class="icon" id="sound" aria-label="Toggle sound" title="Toggle sound">♫</button><button class="icon" data-mode="settings" aria-label="Settings" title="Settings">⚙</button></div></header>
  <aside class="location"><span class="live-dot"></span> SILVER PINE RESERVE <span class="divider">/</span> <span id="location-name">FERN CREEK</span><span class="weather">☀ 16°C · LATE AFTERNOON</span></aside>
  <main id="panel"></main>
- <div id="center-hint"></div><div id="driving-hud"><div class="hud-speed"><b id="hud-speed">0.0</b><small>km/h</small></div><span class="hud-chip" id="hud-battery">100%</span><span class="hud-chip" id="hud-mode">4WD / LOW</span><span id="hud-course"></span><div class="hud-actions"><button id="hud-recover">R · Recover</button><button id="hud-camera">C · Camera</button><button id="hud-photo">P · Photo</button><button id="hud-menu">M · Menu</button></div><small id="hud-fps"></small></div>
+ <div id="center-hint"></div><div id="driving-hud"><div class="hud-speed"><b id="hud-speed">0.0</b><small>km/h</small></div><span class="hud-chip" id="hud-battery">100%</span><span class="hud-chip" id="hud-mode">4WD / LOW</span><span id="hud-course"></span><div class="hud-actions"><button id="hud-recover">R · Recover</button><button id="hud-checkpoint" title="Return to last course gate">Checkpoint</button><button id="hud-camera">C · Camera</button><button id="hud-photo">P · Photo</button><button id="hud-menu">M · Menu</button></div><small id="hud-fps"></small></div>
  <div id="telemetry" class="telemetry"><div class="gear"><small>DRIVETRAIN</small><b>4WD <span>LOW</span></b></div><div class="speed"><b id="speed">0.0</b><span>km/h<small>GROUND SPEED</small></span></div><div><small>SURFACE</small><b id="surface">Dry granite</b></div><div class="contact"><small>WHEEL CONTACT</small><div id="contacts"><i></i><i></i><i></i><i></i></div></div><div><small>BODY ROLL</small><b id="roll">0°</b></div><div class="timer"><small>SESSION</small><b id="time">00:00</b></div></div>
  <footer><div class="controls"><span><kbd>W</kbd><kbd>S</kbd> Throttle</span><span><kbd>A</kbd><kbd>D</kbd> Steer</span><span><kbd>SPACE</kbd> Brake</span><button id="recover"><kbd>R</kbd> Recover</button></div><div class="view-controls"><button id="camera"><kbd>C</kbd> Chase camera</button><button id="photo"><kbd>P</kbd> Photo mode</button><button id="debug-toggle"><kbd>F2</kbd> Physics</button><span id="fps">— FPS</span></div></footer>
  <aside id="physics-debug" hidden><b>VEHICLE DYNAMICS / LIVE</b><p>F2 toggles telemetry and collision geometry</p><pre id="debug-data"></pre></aside><div id="toast" role="status"></div><div id="touch"><button data-key="KeyW" aria-label="Throttle forward">↑</button><button data-key="KeyS" aria-label="Reverse">↓</button><button data-key="KeyA" aria-label="Steer left">←</button><button data-key="KeyD" aria-label="Steer right">→</button></div>
- <div id="photo-tools"><span>PHOTO MODE · Drag to orbit · Scroll to zoom</span><button id="download-photo">Save photograph <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button id="exit-photo">Exit <kbd>P</kbd></button></div>`;
+ <div id="photo-tools"><span>PHOTO MODE · Drag to orbit · Scroll to zoom</span><label>Light<select id="photo-weather">${['Clear', 'Overcast', 'Rain', 'Fog', 'Sunset', 'Night'].map((w) => `<option>${w}</option>`).join('')}</select></label><label>DoF<input type="checkbox" id="photo-dof"></label><label>Focus / m<input id="photo-focus" type="range" min=".15" max="2.5" step=".01" value="1"></label><button id="download-photo">Save photograph <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><button id="exit-photo">Exit <kbd>P</kbd></button></div>`;
     document
       .querySelectorAll<HTMLElement>('[data-mode]')
       .forEach((b) => (b.onclick = () => this.setMode(b.dataset.mode as Mode)));
     document.querySelector<HTMLButtonElement>('.logo')!.onclick = () => this.setMode('home');
     this.click('hud-menu', () => this.toggleMenu());
     this.click('hud-recover', () => this.onRecover());
+    this.click('hud-checkpoint', () => this.onCheckpoint());
     this.click('hud-camera', () => this.onCamera());
     this.click('hud-photo', () => this.onPhoto());
     this.click('debug-toggle', () => this.onDebug());
@@ -143,7 +146,7 @@ export class UI {
       panel.innerHTML = `<section class="map-panel"><div class="eyebrow">SILVER PINE / MINIATURE CRAWLING</div><h1>A line for every setup<span>.</span></h1><p class="intro">Four authored courses, measured in millimetres. No oversized vehicle roads.</p><div class="course-grid">${trails
         .map((course, index) => {
           const record = this.state.records[course.id];
-          return `<button class="course-tile ${this.activeTrail === index ? 'selected' : ''}" data-trail="${index}" style="--course:${course.color}"><small>${course.zone.toUpperCase()} / ${course.grade.toUpperCase()}</small><h2>${course.name}</h2><p>${course.description}</p><div><span>${course.distance} · ${Math.round(course.gateWidth * 1000)} mm gates</span><b>${course.reward} credits</b></div><footer>${record?.bestTime ? `Best ${record.bestTime.toFixed(1)} s · ${record.bestScore} points` : 'No timed record yet'}</footer></button>`;
+          return `<button class="course-tile ${this.activeTrail === index ? 'selected' : ''}" data-trail="${index}" style="--course:${course.color}"><small>${course.zone.toUpperCase()} / ${course.grade.toUpperCase()}</small><h2>${course.name}</h2><p>${course.description}</p><div><span>${course.distance} · ${Math.round(course.gateWidth * 1000)} mm gates</span><b>${course.reward} points</b></div><footer>${record?.bestTime ? `Best ${record.bestTime.toFixed(1)} s · ${record.bestScore} points` : 'No timed record yet'}</footer></button>`;
         })
         .join(
           '',
@@ -171,8 +174,12 @@ export class UI {
         this.setMode('trail');
       });
     } else if (this.mode === 'settings') {
-      panel.innerHTML = `<section class="modal-card graphics-menu"><div class="eyebrow">RENDERING & TRANSMITTER</div><h1>Make it your own<span>.</span></h1><label>Graphics preset<select id="quality">${['Low', 'Medium', 'High', 'Ultra', 'Auto', 'Custom'].map((p) => `<option ${this.state.graphics.preset === p ? 'selected' : ''}>${p}</option>`).join('')}</select></label><label>Environment<select id="weather">${['Clear', 'Overcast', 'Rain', 'Fog', 'Sunset', 'Night'].map((weather) => `<option ${this.state.weather === weather ? 'selected' : ''}>${weather}</option>`).join('')}</select></label><div id="graphics-fields"></div><label class="toggle-row">Electric motor audio<input type="checkbox" id="audio" ${t.audio ? 'checked' : ''}></label><div id="control-settings"></div><button id="back" class="primary">${this.started ? 'Resume driving' : 'Return home'} →</button><small>Rendering changes preserve the same wheel and suspension simulation.</small></section>`;
+      panel.innerHTML = `<section class="modal-card graphics-menu"><div class="eyebrow">RENDERING & TRANSMITTER</div><h1>Make it your own<span>.</span></h1><label>Graphics preset<select id="quality">${['Low', 'Medium', 'High', 'Ultra', 'Auto', 'Custom'].map((p) => `<option ${this.state.graphics.preset === p ? 'selected' : ''}>${p}</option>`).join('')}</select></label><label>Environment<select id="weather">${['Clear', 'Overcast', 'Rain', 'Fog', 'Sunset', 'Night'].map((weather) => `<option ${this.state.weather === weather ? 'selected' : ''}>${weather}</option>`).join('')}</select></label><div id="graphics-fields"></div><label class="toggle-row">Electric motor audio<input type="checkbox" id="audio" ${t.audio ? 'checked' : ''}></label><label class="toggle-row">Visual scuffs & scratches<input type="checkbox" id="visual-wear" ${this.state.preferences.visualWear ? 'checked' : ''}></label><div id="control-settings"></div><button id="back" class="primary">${this.started ? 'Resume driving' : 'Return home'} →</button><small>Rendering changes preserve the same wheel and suspension simulation.</small></section>`;
       this.renderGraphics();
+      document.getElementById('visual-wear')!.onchange = (e) => {
+        this.state.preferences.visualWear = (e.target as HTMLInputElement).checked;
+        this.onSave();
+      };
       document.getElementById('weather')!.onchange = (e) => {
         this.state.weather = (e.target as HTMLSelectElement).value as Save['weather'];
         this.onWeather();
@@ -229,6 +236,11 @@ export class UI {
         ['preload', 'Spring preload', 0, 15, 1, 'mm', 1000],
         ['gearRatio', 'Transmission ratio', 12, 35, 1, ':1'],
         ['axleRatio', 'Axle reduction', 3, 6, 0.2, ':1'],
+        ['frontOverdrive', 'Front overdrive', 0, 20, 1, '%', 100],
+        ['rearUnderdrive', 'Rear underdrive', 0, 20, 1, '%', 100],
+        ['ballast', 'Chassis ballast', 0, 300, 10, 'g', 1000],
+        ['ballastPosition', 'Ballast fore / aft', -120, 120, 5, 'mm', 1000],
+        ['linkHeight', 'Chassis link mount offset', -5, 5, 1, 'mm', 1000],
         ['dragBrake', 'ESC drag brake', 0, 1, 0.05, ''],
         ['voltage', 'Battery voltage', 6, 11.1, 0.1, 'V'],
         ['capacity', 'Battery capacity', 1, 4, 0.2, 'Ah'],
@@ -256,13 +268,19 @@ export class UI {
           'preload',
           'travel',
           'rearTravel',
+          'linkHeight',
         ],
         Motor: ['voltage', 'capacity', 'turns', 'kv', 'throttleExpo', 'sensitivity', 'dragBrake'],
-        Drivetrain: ['gearRatio', 'axleRatio'],
-        Weight: ['batteryPosition', 'batteryHeight', 'wheelWeight'],
+        Drivetrain: ['gearRatio', 'axleRatio', 'frontOverdrive', 'rearUnderdrive'],
+        Weight: ['batteryPosition', 'batteryHeight', 'wheelWeight', 'ballast', 'ballastPosition'],
         Steering: ['servoRate', 'servoTorque', 'endpoint', 'steeringExpo'],
       };
       let fields = '';
+      if (this.tuningCategory === 'Tyres')
+        fields += select('tread', 'Tread pattern', [
+          ['rock', 'Dense rock blocks'],
+          ['trail', 'Open trail chevrons'],
+        ]);
       if (this.tuningCategory === 'Tyres')
         fields += select('compound', 'Rubber compound', [
           ['soft', 'Soft crawler'],
@@ -322,7 +340,7 @@ export class UI {
         this.renderTune('tune');
         this.toast(tuningPresets[Number(value)].description);
       };
-      for (const key of ['compound', 'motor', 'motorKind', 'differential', 'axleType'])
+      for (const key of ['compound', 'tread', 'motor', 'motorKind', 'differential', 'axleType'])
         if (document.getElementById(key))
           document.getElementById(key)!.onchange = (e) => {
             (t as any)[key] = (e.target as HTMLSelectElement).value;
@@ -362,10 +380,6 @@ export class UI {
         b.querySelector('b')!.textContent = build.name;
         (b.querySelector('span') as HTMLElement).style.background = build.tune.paint;
         b.onclick = () => {
-          if (!this.state.owned.includes(build.tune.vehicle)) {
-            this.toast('This build needs a vehicle you do not own.');
-            return;
-          }
           if (this.state.tune.vehicle !== build.tune.vehicle) this.onVehicle(build.tune.vehicle);
           Object.assign(this.state.tune, build.tune);
           this.onTune();
@@ -392,7 +406,7 @@ export class UI {
   }
   renderMenu(panel: HTMLElement) {
     const paused = this.mode === 'menu';
-    panel.innerHTML = `<section class="main-menu ${paused ? 'pause-menu' : ''}"><div class="eyebrow">${paused ? 'TRANSMITTER PAUSED' : 'RIDGEBOUND / FIELD WORKS'}</div><h1>${paused ? 'Take a breath.' : 'Built small.<br><em>Go further.</em>'}</h1><p>${paused ? 'Your vehicle and course clock are paused.' : 'Hobby-grade mechanics. Deliberate lines. A miniature world worth taking slowly.'}</p><div class="main-actions">${paused ? '<button id="resume" class="primary">Resume driving <kbd>M</kbd></button>' : ''}<button data-go="map">Drive / select a trail <span>↗</span></button><button data-go="garage">Vehicle garage <span>02</span></button><button data-go="workshop">Tuning workshop <span>03</span></button><button data-go="settings">Settings <span>04</span></button>${paused ? '<button id="leave-trail">Leave trail / main menu</button>' : ''}</div><small>${vehicleSpec(this.state.tune.vehicle).name} · 1:10 scale · ${this.state.owned.length} owned</small></section>`;
+    panel.innerHTML = `<section class="main-menu ${paused ? 'pause-menu' : ''}"><div class="eyebrow">${paused ? 'TRANSMITTER PAUSED' : 'RIDGEBOUND / FIELD WORKS'}</div><h1>${paused ? 'Take a breath.' : 'Built small.<br><em>Go further.</em>'}</h1><p>${paused ? 'Your vehicle and course clock are paused.' : 'Hobby-grade mechanics. Deliberate lines. A miniature world worth taking slowly.'}</p><div class="main-actions">${paused ? '<button id="resume" class="primary">Resume driving <kbd>M</kbd></button>' : ''}<button data-go="map">Drive / select a trail <span>↗</span></button><button data-go="garage">Vehicle garage <span>02</span></button><button data-go="workshop">Tuning workshop <span>03</span></button><button data-go="settings">Settings <span>04</span></button>${paused ? '<button id="leave-trail">Leave trail / main menu</button>' : ''}</div><small>${vehicleSpec(this.state.tune.vehicle).name} · 1:10 scale · ${vehicles.length} vehicles · all available</small></section>`;
     panel
       .querySelectorAll<HTMLElement>('[data-go]')
       .forEach((button) => (button.onclick = () => this.setMode(button.dataset.go as Mode)));
@@ -406,11 +420,23 @@ export class UI {
   }
   renderGarage(panel: HTMLElement) {
     const spec = vehicleSpec(this.previewVehicle),
-      owned = this.state.owned.includes(spec.id),
       selected = this.state.tune.vehicle === spec.id,
-      tune = selected ? this.state.tune : this.state.vehicleTunes[spec.id],
-      mass = 3.16 + spec.chassisMass - 1.05 + spec.bodyMass - 0.32;
-    panel.innerHTML = `<section class="selection-panel"><div class="eyebrow">FIELD WORKS / VEHICLE GARAGE</div><h1>Your next line<span>.</span></h1><p class="intro">Original hobby-grade rigs. Inspect every part in 3D.</p><div class="vehicle-cards">${vehicles.map((v) => `<button data-vehicle="${v.id}" class="${spec.id === v.id ? 'selected' : ''}"><span class="paint-dot" style="background:${v.paint}"></span><div><small>${this.state.owned.includes(v.id) ? 'OWNED' : 'AVAILABLE / ' + v.price + ' CREDITS'}</small><b>${v.name}</b><span>${v.category}</span></div></button>`).join('')}</div><div class="vehicle-info"><small>${spec.category}</small><h2>${spec.name}</h2><p>${spec.description}</p><dl><div><dt>Scale / wheelbase</dt><dd>1:10 / ${spec.wheelbase} mm</dd></div><div><dt>Stock mass</dt><dd>${mass.toFixed(2)} kg</dd></div><div><dt>Tyres / drive</dt><dd>${Math.round((tune?.radius ?? 0.059) * 2000)} mm / 4WD</dd></div><div><dt>Suspension</dt><dd>Triangulated four-link</dd></div><div><dt>Body mass / height</dt><dd>${spec.bodyMass * 1000} g / ${Math.round(spec.bodyHeight * 1000)} mm</dd></div></dl><p class="comparison">${spec.id === 'c2' ? 'Compared with R1: 310 g less stock mass and a body COM mounted 55 mm lower.' : 'A hard shell and ladder frame for measured trail work. C2 shares the axle platform with a lighter, lower structure.'}</p>${owned ? `<div class="swatches">${['#496d62', '#c4bca4', '#944d37', '#385d74', '#303936'].map((color) => `<button data-garage-paint="${color}" style="--swatch:${color}" aria-label="Paint ${color}" ${!selected ? 'disabled' : ''}></button>`).join('')}</div><button id="select-vehicle" class="primary">${selected ? 'Take this rig to tuning' : 'Select ' + spec.name} ↗</button><button id="clean-vehicle" class="secondary">Clean selected vehicle</button>${spec.price > 0 ? `<button id="sell-vehicle" class="text-button">Sell for ${Math.round(spec.price * 0.75)} credits</button>` : ''}` : `<button id="buy-vehicle" class="primary" ${this.state.credits < spec.price ? 'disabled' : ''}>Purchase · ${spec.price} credits</button><p class="part-info">You have ${this.state.credits} credits. All courses remain open for exploration.</p>`}</div></section><div class="inspection-note"><span>1:10 / ROTATE TO INSPECT</span><p>Drag to orbit · scroll to zoom<br>Models and components are real geometry</p></div>`;
+      tune = selected
+        ? this.state.tune
+        : (this.state.vehicleTunes[spec.id] ?? vehicleTune(spec.id));
+    const mass =
+      3.16 +
+      spec.chassisMass -
+      1.05 +
+      spec.bodyMass -
+      0.32 +
+      (((tune.capacity / 2.2) * tune.voltage) / 7.4 - 1) * 0.34 +
+      tune.wheelWeight * 4 +
+      tune.ballast;
+    panel.innerHTML = `<section class="selection-panel"><div class="eyebrow">FIELD WORKS / OPEN GARAGE</div><h1>Find your line<span>.</span></h1><p class="intro">Every crawler and every tuning part is available from the start.</p><button id="test-drive-vehicle" class="primary">Test-drive ${spec.name} <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><div class="vehicle-cards">${vehicles.map((v) => `<button data-vehicle="${v.id}" class="${spec.id === v.id ? 'selected' : ''}"><span class="paint-dot" style="background:${v.paint}"></span><div><small>READY TO DRIVE</small><b>${v.name}</b><span>${v.category}</span></div></button>`).join('')}</div><div class="vehicle-info"><small>${spec.category}</small><h2>${spec.name}</h2><p>${spec.description}</p><dl><div><dt>Scale / wheelbase</dt><dd>${spec.scale} / ${spec.wheelbase} mm</dd></div><div><dt>Configured mass</dt><dd>${mass.toFixed(2)} kg</dd></div><div><dt>Tyres / drive</dt><dd>${Math.round(tune.radius * 2000)} × ${Math.round(tune.tyreWidth * 1000)} mm / 4WD</dd></div><div><dt>Shock stroke F / R</dt><dd>${Math.round(tune.travel * 1000)} / ${Math.round(tune.rearTravel * 1000)} mm</dd></div><div><dt>Steering demand</dt><dd>${Math.round((tune.endpoint * 180) / Math.PI)}° / ${tune.servoTorque.toFixed(1)} N·m</dd></div><div><dt>Gearing / axles</dt><dd>${tune.gearRatio}:1 × ${tune.axleRatio}:1 / ${tune.axleType}</dd></div><div><dt>Motor / battery</dt><dd>${tune.motorKind === 'brushed' ? tune.turns + 'T' : tune.kv + 'KV'} / ${tune.voltage.toFixed(1)} V</dd></div><div><dt>Body COM mount</dt><dd>${Math.round(spec.bodyHeight * 1000)} mm above chassis origin</dd></div></dl><div class="swatches">${['#496d62', '#c4bca4', '#944d37', '#385d74', '#303936'].map((color) => `<button data-garage-paint="${color}" style="--swatch:${color}" aria-label="Paint ${color}"></button>`).join('')}</div><button id="select-vehicle" class="primary">${selected ? 'Take this rig to tuning' : 'Select ' + spec.name} ↗</button><button id="clean-vehicle" class="secondary">Clean & reset visual wear</button><div class="finish-comparison"><button id="show-current">Current finish</button><button id="show-clean">Clean preview</button></div><p class="part-info">All vehicles and parts are ready to use. Challenge points track optional progress.</p></div></section><div class="inspection-note"><span>${spec.scale} / ROTATE TO INSPECT</span><p>Drag to orbit · scroll to zoom<br>Models and components are real geometry</p></div>`;
+    const select = () => {
+      if (!selected) this.onVehicle(spec.id);
+    };
     panel.querySelectorAll<HTMLElement>('[data-vehicle]').forEach(
       (button) =>
         (button.onclick = () => {
@@ -422,42 +448,26 @@ export class UI {
     panel.querySelectorAll<HTMLElement>('[data-garage-paint]').forEach(
       (button) =>
         (button.onclick = () => {
+          select();
           this.state.tune.paint = button.dataset.garagePaint!;
           this.onTune();
         }),
     );
-    if (owned) {
-      this.click('select-vehicle', () => {
-        if (selected) this.setMode('workshop');
-        else {
-          this.onVehicle(spec.id);
-          this.previewVehicle = spec.id;
-          this.render();
-        }
-      });
-      this.click('clean-vehicle', () => {
-        this.onClean();
-        this.toast('Selected vehicle cleaned.');
-      });
-      if (spec.price > 0)
-        this.click('sell-vehicle', () => {
-          if (sellVehicle(this.state, spec.id)) {
-            this.onVehicle(this.state.tune.vehicle);
-            this.previewVehicle = this.state.tune.vehicle;
-            this.onSave();
-            this.render();
-          } else this.toast('Keep at least one vehicle in your garage.');
-        });
-    } else
-      this.click('buy-vehicle', () => {
-        if (buyVehicle(this.state, spec.id)) {
-          this.onVehicle(spec.id);
-          this.previewVehicle = spec.id;
-          this.onSave();
-          this.render();
-          this.toast(spec.name + ' added to your garage.');
-        }
-      });
+    this.click('select-vehicle', () => {
+      select();
+      this.setMode('workshop');
+    });
+    this.click('test-drive-vehicle', () => {
+      select();
+      this.onTestDrive();
+    });
+    this.click('show-current', () => this.onDirtPreview(false));
+    this.click('show-clean', () => this.onDirtPreview(true));
+    this.click('clean-vehicle', () => {
+      select();
+      this.onClean();
+      this.toast('Vehicle cleaned.');
+    });
   }
   renderGraphics() {
     const g = this.state.graphics,
@@ -472,6 +482,7 @@ export class UI {
       ['drawDistance', 'Draw distance (metres)', 25, 160, 5],
     ];
     el.innerHTML =
+      `<label>Material texture size<select id="texture-size">${[128, 256, 512, 1024].map((v) => `<option value="${v}" ${g.textureSize === v ? 'selected' : ''}>${v} px</option>`).join('')}</select></label><label>Wheel geometry detail<select id="wheel-detail">${['Low', 'Medium', 'High'].map((name, i) => `<option value="${i}" ${g.wheelDetail === i ? 'selected' : ''}>${name}</option>`).join('')}</select></label><label class="toggle-row">Visible tyre deformation<input id="tyre-deformation" type="checkbox" ${g.tyreDeformation ? 'checked' : ''}></label>` +
       sliders
         .map(([key, name, min, max, step]) =>
           this.range(key, name, Number(g[key]), min, max, step, ''),
@@ -495,6 +506,23 @@ export class UI {
             `<label class="toggle-row">${{ water: 'Detailed water & ripples', accumulation: 'Visible mud accumulation', ao: 'Screen-space ambient occlusion', bloom: 'Subtle LED bloom', dof: 'Macro depth of field', dynamicResolution: 'Dynamic resolution', showFPS: 'Show render FPS', hideHUD: 'Hide driving instruments' }[key]}<input type="checkbox" data-graphic="${key}" ${g[key] ? 'checked' : ''}></label>`,
         )
         .join('');
+    const custom = () => {
+      g.preset = 'Custom';
+      (document.getElementById('quality') as HTMLSelectElement).value = 'Custom';
+      this.onGraphics();
+    };
+    document.getElementById('texture-size')!.onchange = (e) => {
+      g.textureSize = Number((e.target as HTMLSelectElement).value) as Graphics['textureSize'];
+      custom();
+    };
+    document.getElementById('wheel-detail')!.onchange = (e) => {
+      g.wheelDetail = Number((e.target as HTMLSelectElement).value) as Graphics['wheelDetail'];
+      custom();
+    };
+    document.getElementById('tyre-deformation')!.onchange = (e) => {
+      g.tyreDeformation = (e.target as HTMLInputElement).checked;
+      custom();
+    };
     for (const [key] of sliders)
       document.getElementById(key)!.oninput = (e) => {
         (g as any)[key] = Number((e.target as HTMLInputElement).value);

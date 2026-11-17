@@ -1,6 +1,7 @@
 import * as T from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { box, metal, mesh, label, rod } from './materials';
+import { surfaceMaterial } from './material-library';
 import { surfaces, type Surface } from './dynamics/surfaces';
 export const testStations = [
   { name: 'Turning pad', x: 10, z: -10 },
@@ -8,10 +9,17 @@ export const testStations = [
   { name: '20° climb', x: 10, z: -3.6 },
   { name: '25° sidehill', x: 14.5, z: -10 },
   { name: 'Grip lanes', x: 8, z: -5 },
+  { name: 'Water & washing trough', x: 13, z: -5.3 },
+  { name: 'Acceleration lane', x: 7, z: -12 },
+  { name: 'Measured rock garden', x: 9.2, z: -7.6 },
 ];
 export class TestArea {
   group = new T.Group();
   materials = new Map<number, Surface>();
+  water: T.Mesh;
+  waterLevel(x: number, z: number) {
+    return Math.abs(x - 13) < 0.32 && Math.abs(z + 4.45) < 0.7 ? 0.035 : null;
+  }
   constructor(public world: RAPIER.World) {
     const floor = this.solid([10, 0.08, 12], [11, -0.04, -7], metal('#515c50', 0.98, 0));
     floor.name = 'Physical test area';
@@ -34,7 +42,7 @@ export class TestArea {
       this.solid(
         [0.48, 0.006, 1.6],
         [x, 0.006, -4.4],
-        metal(['#8d8b7c', '#49655f', '#9d9479', '#584a35'][i], 0.9, 0),
+        surfaceMaterial(i === 3 ? 'mud' : i === 2 ? 'dirt' : 'rock'),
         surfaces[name as keyof typeof surfaces],
       );
       const caption = mesh(new T.PlaneGeometry(0.42, 0.13), label(name.toUpperCase()), this.group, [
@@ -43,6 +51,31 @@ export class TestArea {
         -5.3,
       ]);
       caption.rotation.x = -Math.PI / 2;
+    }
+    this.water = mesh(
+      new T.PlaneGeometry(0.64, 1.4, 16, 32),
+      new T.MeshPhysicalMaterial({
+        color: '#526f64',
+        roughness: 0.16,
+        metalness: 0,
+        transparent: true,
+        opacity: 0.62,
+        clearcoat: 1,
+      }),
+      this.group,
+      [13, 0.035, -4.45],
+    );
+    this.water.rotation.x = -Math.PI / 2;
+    for (const x of [12.65, 13.35])
+      this.solid([0.03, 0.05, 1.5], [x, 0.025, -4.45], metal('#515950', 0.9, 0));
+    const line = new T.MeshBasicMaterial({ color: '#ddcfa0' });
+    for (let i = 0; i < 6; i++) {
+      const mark = mesh(new T.PlaneGeometry(0.4, 0.008), line, this.group, [
+        7,
+        0.002,
+        -12 + i * 0.4,
+      ]);
+      mark.rotation.x = -Math.PI / 2;
     }
     // Rounded physical step obstacles; no raycast-only obstacle stand-ins.
     for (let i = 0; i < 5; i++) {

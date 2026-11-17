@@ -1,5 +1,6 @@
 import { validateGraphics, type Graphics } from './graphics';
-import { vehicleSpec, vehicleTune, type VehicleId } from './catalogue';
+import { vehicles, vehicleTune, type VehicleId } from './catalogue';
+import { validateCondition, type SurfaceCondition } from './soiling';
 import type { CourseRecord } from './courses';
 import { isBindingCode } from './dynamics/controls';
 import { defaults, type Tune } from './dynamics/tuning';
@@ -15,6 +16,8 @@ export const defaultBindings: Record<Action, string> = {
 };
 export type Save = {
   version: 1;
+  condition: Partial<Record<VehicleId, SurfaceCondition>>;
+  preferences: { visualWear: boolean; camera: number };
   tune: Tune;
   builds: { name: string; tune: Tune }[];
   completed: number[];
@@ -33,6 +36,11 @@ export function validateTune(value: unknown): Tune {
     out = { ...defaults };
   const bounds: Partial<Record<keyof Tune, [number, number]>> = {
     sidewall: [400, 8000],
+    frontOverdrive: [0, 0.2],
+    rearUnderdrive: [0, 0.2],
+    ballast: [0, 0.3],
+    ballastPosition: [-0.12, 0.12],
+    linkHeight: [-0.005, 0.005],
     rearSpring: [25, 95],
     rearDamping: [2, 10],
     rebound: [5, 40],
@@ -68,7 +76,7 @@ export function validateTune(value: unknown): Tune {
       (out as any)[key] = Math.max(min, Math.min(max, value));
   }
   const enums: Partial<Record<keyof Tune, string[]>> = {
-    vehicle: ['r1', 'c2'],
+    vehicle: vehicles.map((v) => v.id),
     tread: ['rock', 'trail'],
     compound: ['soft', 'trail', 'hard'],
     motor: ['torque', 'trail'],
@@ -90,6 +98,8 @@ export function validateTune(value: unknown): Tune {
 export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): Save {
   const base: Save = {
     version: 1,
+    condition: Object.fromEntries(vehicles.map((v) => [v.id, validateCondition(null)])),
+    preferences: { visualWear: true, camera: 0 },
     tune: { ...defaults },
     builds: [],
     completed: [],
@@ -97,7 +107,7 @@ export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): Sav
     bindings: { ...defaultBindings },
     weather: 'Clear',
     dirt: {},
-    owned: ['r1'],
+    owned: vehicles.map((v) => v.id),
     vehicleTunes: {},
     records: {},
     graphics: { ...validateGraphics(null) },
@@ -106,12 +116,8 @@ export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): Sav
     const data = JSON.parse(storage.getItem(SAVE_KEY) || 'null');
     if (data?.version !== 1) return base;
     base.tune = validateTune(data.tune);
-    base.owned = Array.isArray(data.owned)
-      ? [...new Set<VehicleId>(data.owned.filter((id: unknown) => id === 'r1' || id === 'c2'))]
-      : ['r1'];
-    if (!base.owned.length) base.owned = ['r1'];
-    if (!base.owned.includes(base.tune.vehicle))
-      base.tune = validateTune({ ...base.tune, vehicle: base.owned[0] });
+    // Unlock every current/future catalogue entry, including when migrating old locked saves.
+    base.owned = vehicles.map((v) => v.id);
     if (['Clear', 'Overcast', 'Rain', 'Fog', 'Sunset', 'Night'].includes(data.weather))
       base.weather = data.weather;
     for (const id of base.owned) {
@@ -119,6 +125,16 @@ export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): Sav
       if (typeof dirt === 'number' && Number.isFinite(dirt))
         base.dirt[id] = Math.max(0, Math.min(1, dirt));
     }
+    for (const id of base.owned)
+      base.condition[id] = validateCondition(data.condition?.[id], base.dirt[id] ?? 0);
+    base.preferences.visualWear =
+      typeof data.preferences?.visualWear === 'boolean' ? data.preferences.visualWear : true;
+    base.preferences.camera =
+      Number.isInteger(data.preferences?.camera) &&
+      data.preferences.camera >= 0 &&
+      data.preferences.camera < 6
+        ? data.preferences.camera
+        : 0;
     base.graphics = validateGraphics(data.graphics, base.tune.quality);
     for (const id of base.owned) {
       if (data.vehicleTunes?.[id])
@@ -181,25 +197,8 @@ export function saveState(state: Save, storage: Pick<Storage, 'setItem'> = local
 }
 
 export function selectVehicle(state: Save, id: VehicleId) {
-  if (!state.owned.includes(id)) return false;
+  if (!vehicles.some((v) => v.id === id)) return false;
   state.vehicleTunes[state.tune.vehicle] = { ...state.tune };
   state.tune = validateTune({ ...(state.vehicleTunes[id] ?? vehicleTune(id)), vehicle: id });
-  return true;
-}
-export function buyVehicle(state: Save, id: VehicleId) {
-  const spec = vehicleSpec(id);
-  if (state.owned.includes(id) || state.credits < spec.price) return false;
-  state.credits -= spec.price;
-  state.owned.push(id);
-  state.vehicleTunes[id] = vehicleTune(id);
-  return true;
-}
-export function sellVehicle(state: Save, id: VehicleId) {
-  const spec = vehicleSpec(id);
-  if (state.owned.length < 2 || !state.owned.includes(id) || spec.price === 0) return false;
-  if (state.tune.vehicle === id) selectVehicle(state, state.owned.find((v) => v !== id)!);
-  state.owned = state.owned.filter((v) => v !== id);
-  state.credits += Math.round(spec.price * 0.75);
-  delete state.vehicleTunes[id];
   return true;
 }

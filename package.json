@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:browser": "node tests/browser.mjs",
     "test:production": "node tests/production.mjs",
-    "test:visual": "node tests/visual.mjs"
+    "test:visual": "node tests/visual.mjs",
+    "test:realism": "node tests/free-realism.mjs",
+    "test:mud": "node tests/mud-isolation.mjs"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.0",
