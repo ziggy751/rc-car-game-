@@ -1,26 +1,47 @@
-# Validation record
+# Physics overhaul verification
 
-Validated in the managed Linux cloud environment on 17 November 2026 using Node 24.22.1, npm 11.9.0 and headless system Chromium with SwiftShader software WebGL.
+Validated on 17 November 2026 with Node 24.22.1, npm 11.9.0, Rapier 0.19 and system Chromium on the managed Linux cloud machine. Existing reference assets, route progression, local build saves and static deployment remain intact.
 
-## Passed
+## Automated physical regression
 
-- Clean `npm ci --cache /workspace/.npm-cache --no-audit --no-fund` from the saved lockfile.
-- `npm test`: **7 tests executed, 7 passed**, none skipped. Covers four-contact settling, acceleration and braking, asymmetric suspension loading/body tilt, effective tuning changes, recovery, malformed-save handling and named-build persistence.
-- `npm run build`: strict TypeScript checking and a complete static production bundle in `dist/`.
-- Development-browser smoke run: **9 checks passed** with zero JavaScript page errors. Renderer/physics startup; actual keyboard movement (0.155 m); body removal/paint; live tuning; build save; map travel; photo mode; reload persistence; mobile layout/touch-button visibility.
-- Production preview checks passed: HTTP 200, bundled assets and WASM startup, camera switch, real PNG download, workshop controls and zero page errors. Reproduce with `npm run preview -- --port 4173` followed by `npm run test:production`.
-- All **130 reference images** decoded; six complete contact sheets examined. Full path/dimension/size/checksum inventory is in `reference-manifest.json`.
-- `git diff --check`.
+`npm test`: **22 tests executed; 22 passed; zero skipped** in the final complete run.
 
-## Warnings and limits
+Coverage includes constrained assembly settling/load balance, progressive wheel-torque acceleration, service braking, precision control, force-driven Ackermann turning, reverse yaw, single-wheel articulation/link-length preservation, a 20° climb and downhill brake hold, finite-friction wheelspin, open/locked differential response, servo settings, battery COM/weight effects, rollover, foam/compound compliance, voltage/gearing, complete-assembly recovery, 30/60/120 render FPS equivalence, interpolation/stall handling, original save migration and remapped touch/arrow bindings and obstacle-aware recovery using actual static collision geometry.
 
-- Rapier 0.19 emits an internal WASM initialization deprecation warning even through its public `init()` API; initialization and physical tests succeed.
-- Vite reports large vendor chunks: Three.js about 523 kB and embedded-WASM Rapier about 2.24 MB before gzip. The app chunk is about 84 kB. This is a startup-download cost, not a failed build.
-- One high-preset development capture reported about 98 draw calls and 1.0 million rendered triangles, and approximately 17 FPS in software WebGL at 1280 × 900. This is **not** a validated 60 FPS claim. A physical GPU performance matrix remains required; lower presets reduce resolution, shadows and vegetation.
-- Mobile checks verify layout and control presence, not physical-device touch handling. No Safari/WebKit, physical Mac/Windows, trackpad or real gamepad session has been performed.
-- The smoke test exercises driving and route selection; it does not prove every trail can be completed with every tune. The full four-gate route needs sustained playtesting.
-- Cloudflare has not been published. The diagnosed remote `main` was still the README-only initial commit; local builds cannot repair a deployment until the new application files are committed/pushed to the configured branch.
+Representative deterministic fixture results (not real-world RC calibration):
 
-Screenshots are generated under ignored `.artifacts/` (trail, garage, exposed mechanics, map and mobile). The reference contact sheets are separately versioned in `docs/reference-sheets/` and never included in the game runtime.
+| Check | Observed result |
+| --- | --- |
+| Base assembly mass | 3.16 kg |
+| Four seconds forward at 50% throttle/full steering | x +0.321 m, z +0.491 m, yaw +46.8° |
+| Front steering under that load | outer 19.9°, inner 35.6° |
+| Reverse steering | yaw −58.8° |
+| 20° incline, three seconds at 80% input | +0.256 m uphill; downhill brake assertion passed |
+| Deliberately low-friction stress fixture, μ = 0.08 | peak absolute slip 0.435 versus 0.201 dry during acceleration |
+| Same throttle, 6 V versus 11.1 V | 0.251 versus 0.470 m/s after the test interval |
+| 11.1 V, higher reduction | 0.269 m/s |
+| 30/60/120 render FPS | final position differences below 0.01 mm for the same fixed-step input sequence |
 
-Reusable cloud `install_script` and `start_skill` were saved as a configuration draft. This does not publish the environment snapshot or the website.
+Split-traction locked mode reduced the tested axle-speed difference from approximately 0.345 to 0.310 rad/s. This demonstrates a change in behavior but **does not validate a perfectly locked mechanical differential**. The projected coupling remains an approximation, and further gear-train calibration is needed.
+
+## Application and production checks
+
+- `npm run build`: TypeScript and static Vite production build passed.
+- Full development browser smoke run: **11 checks passed**, no JavaScript or shader errors. Actual keyboard motion (over 0.25 m), physical tuning, body removal/paint, named builds, reload persistence, map travel, proving-ground travel, live diagnostics/collision wireframes, photo mode, key remapping and mobile control rendering.
+- High-quality rendering check: standard and shadow tyre shaders compiled without console/page errors; normal park and exposed garage model inspected. Garage contact deformation is reset on entry, preventing stale contact planes distorting tyres at the workshop's translated location.
+- Production preview checks: HTTP 200, bundled WASM/asset initialization, camera switching, real PNG download and workshop controls passed. Additional final checks cover reserved shortcut rejection, remapped touch throttle and the small-screen workshop action position.
+- `git diff --check` passed.
+
+## Performance evidence and limits
+
+A 120-step benchmark of the full park scene measured **0.7 ms median**, **1.1 ms p95**, **1.5 ms maximum** per 240 Hz physics step in the measured run. The high-preset scene reported around **105 draw calls / 890k triangles**. These timings include the constrained assembly and actual park collisions; they are not an isolated empty-world benchmark.
+
+Cloud Chromium uses software WebGL, and screenshots showed low software-rendering FPS. No physical gaming GPU frame-rate claim is made. A cross-platform GPU/controller/trackpad matrix, Safari/WebKit tests, long sessions and sustained completion of every trail/tuning combination remain necessary.
+
+Rapier's compatibility package emits its upstream WASM initialization deprecation notice through the public `init()` API, but initialization/tests succeed. Vite warns about the large embedded-WASM physics vendor chunk; the application remains statically deployable. No secret or new backend requirement was introduced.
+
+## Physical approximations
+
+See `PHYSICS_OVERHAUL.md`: reduced radial tyre compliance rather than a full carcass/contact patch; projected differential coupling rather than meshed gears; implicit servo damping rather than an exact electronic current limiter; one four-link chassis rather than alternate Panhard/three-link variants; simplified battery/electrical/soil models. Residual contact creep and constraint deflection need physical calibration. The tests demonstrate the specific capabilities above, not equivalence to a commercial hobby crawler.
+
+Generated application captures are in ignored `.artifacts/`. The complete reference inventory/contact sheets remain separately versioned, outside the production runtime.

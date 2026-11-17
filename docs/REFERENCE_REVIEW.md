@@ -47,7 +47,7 @@ Original R1 expedition body: short overhangs, warm paint, external roof basket, 
 
 ## 02_suspension_and_physics — 27 mechanical and contact references
 
-Separate ladder rails, four coilovers, axle housings, steering bar, four-link rods, driveshafts, beadlock rings and tread geometry. Suspension motion is driven by physical wheel contact lengths. Solid-axle and four-link constraints remain unimplemented.
+Separate ladder rails, four coilovers, axle housings, steering bar, four-link rods, driveshafts, beadlock rings and tread geometry. Suspension motion is driven by physical wheel contact lengths. Solid-axle and four-link constraints are implemented in the subsequent dynamics overhaul; see PHYSICS_OVERHAUL.md for exact limits.
 
 ![Complete contact sheet](reference-sheets/02_suspension_and_physics.jpg)
 
