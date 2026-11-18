@@ -150,13 +150,13 @@ export function terrainMaterial() {
       shader.fragmentShader;
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <map_fragment>',
-      `vec2 soilUV=groundPosition.xz*7.0;vec3 soil=texture2D(map,soilUV).rgb;vec3 moss=texture2D(mossMap,soilUV*.7).rgb;vec3 rock=texture2D(rockMap,soilUV*.5).rgb;float mossBlend=smoothstep(.40,.64,sin(groundPosition.x*2.7)*cos(groundPosition.z*2.1)*.5+.5);float slope=smoothstep(.18,.55,1.0-abs(groundNormal.y));diffuseColor.rgb*=mix(mix(soil,moss,mossBlend*.6),rock,slope);float mudPatch=(1.0-smoothstep(.52,.84,abs(groundPosition.x-.15)))*(1.0-smoothstep(.52,.76,abs(groundPosition.z-5.05)));diffuseColor.rgb=mix(diffuseColor.rgb,texture2D(mudMap,soilUV*.7).rgb,mudPatch*.85);diffuseColor.rgb*=1.0-groundWet*.32;`,
+      `vec2 soilUV=groundPosition.xz*7.0;vec3 soil=texture2D(map,soilUV).rgb;vec3 moss=texture2D(mossMap,soilUV*.7).rgb;vec3 rock=texture2D(rockMap,soilUV*.5).rgb;float mossBlend=smoothstep(.40,.64,sin(groundPosition.x*2.7)*cos(groundPosition.z*2.1)*.5+.5);float slope=smoothstep(.18,.55,1.0-abs(groundNormal.y));vec2 g=abs(groundPosition.xz-vec2(-12.,-8.)),q=abs(groundPosition.xz-vec2(10.,10.)),r=abs(groundPosition.xz-vec2(-12.,10.)),c=abs(groundPosition.xz-vec2(0.,-11.));float graniteArea=1.-smoothstep(4.3,5.,max(g.x,g.y)),quarryArea=1.-smoothstep(4.3,5.,max(q.x,q.y)),rainArea=1.-smoothstep(4.3,5.,max(r.x,r.y)),compArea=1.-smoothstep(4.3,5.,max(c.x,c.y));vec3 groundLayer=mix(mix(soil,moss,mossBlend*.6),rock,slope);groundLayer=mix(groundLayer,mix(rock,soil,.17),graniteArea*.9);groundLayer=mix(groundLayer,mix(soil*1.15,rock,.4),quarryArea*.9);groundLayer=mix(groundLayer,mix(soil*.75,moss,.24),rainArea*.75);groundLayer=mix(groundLayer,mix(soil,rock,.6),compArea*.8);diffuseColor.rgb*=groundLayer;float mudPatch=(1.0-smoothstep(.52,.84,abs(groundPosition.x-.15)))*(1.0-smoothstep(.52,.76,abs(groundPosition.z-5.05)));diffuseColor.rgb=mix(diffuseColor.rgb,texture2D(mudMap,soilUV*.7).rgb,mudPatch*.85);diffuseColor.rgb*=1.0-groundWet*.32;`,
     );
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <roughnessmap_fragment>',
       '#include <roughnessmap_fragment>\n float wetMud=(1.0-smoothstep(.52,.84,abs(groundPosition.x-.15)))*(1.0-smoothstep(.52,.76,abs(groundPosition.z-5.05)));roughnessFactor=mix(roughnessFactor,.28,max(groundWet,wetMud*.8));',
     );
   };
-  mat.customProgramCacheKey = () => 'layered-ground-v1';
+  mat.customProgramCacheKey = () => 'layered-ground-v2';
   return { material: mat, uniforms };
 }

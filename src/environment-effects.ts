@@ -17,6 +17,9 @@ export type ContactSample = {
   axis: T.Vector3;
   width: number;
   water: boolean;
+  wetness?: number;
+  mudDepth?: number;
+  treadFactor?: number;
 };
 export function effectIntent(s: ContactSample) {
   const forward = s.axis.clone().cross(s.normal).normalize(),
@@ -35,7 +38,13 @@ export function effectIntent(s: ContactSample) {
     : spin && loose
       ? Math.min(
           140,
-          (10 + Math.abs(slipSpeed) * 100) * (s.width / 0.044) * Math.min(2, s.load / 8),
+          (10 + Math.abs(slipSpeed) * 100) *
+            (s.width / 0.044) *
+            Math.min(2, s.load / 8) *
+            (s.treadFactor ?? 1) *
+            (s.surface === 'Mud'
+              ? (0.5 + (s.wetness ?? 0.75)) * (0.6 + Math.min(1, (s.mudDepth ?? 0.03) / 0.05))
+              : 1),
         )
       : 0;
   const direction = forward
@@ -68,7 +77,9 @@ export type Grain = {
   kind: string;
   bounce: number;
 };
+export type ParticleHit = { point: T.Vector3; normal: T.Vector3; actor?: number };
 export class ParticlePool {
+  onImpact: ((grain: Grain, hit: ParticleHit) => void) | null = null;
   slots: Grain[];
   cursor = 0;
   emitted = 0;
@@ -103,7 +114,12 @@ export class ParticlePool {
     p.bounce = 0;
     this.emitted++;
   }
-  update(dt: number, height: (x: number, z: number) => number) {
+  update(
+    dt: number,
+    height: (x: number, z: number) => number,
+    collision?: (from: T.Vector3, to: T.Vector3) => ParticleHit | null,
+  ) {
+    let queries = 6;
     for (const p of this.slots) {
       if (p.life <= 0) continue;
       p.life -= dt;
@@ -111,7 +127,20 @@ export class ParticlePool {
         p.velocity.multiplyScalar(Math.exp(-dt * 2));
         p.velocity.y += dt * 0.05;
       } else p.velocity.y -= 9.81 * dt;
+      const previous = p.p.clone();
       p.p.addScaledVector(p.velocity, dt);
+      if (collision && p.kind !== 'dust' && queries-- > 0) {
+        const hit = collision(previous, p.p);
+        if (hit) {
+          p.p.copy(hit.point).addScaledVector(hit.normal, p.size);
+          const along = p.velocity.dot(hit.normal);
+          if (along < 0) p.velocity.addScaledVector(hit.normal, -along * 1.18);
+          p.velocity.multiplyScalar(0.5);
+          this.onImpact?.(p, hit);
+          if (hit.actor !== undefined && p.kind === 'mud') p.life = 0;
+        }
+      }
+
       const y = height(p.p.x, p.p.z) + p.size;
       if (p.kind !== 'dust' && p.p.y < y) {
         p.p.y = y;
@@ -284,6 +313,7 @@ export class EnvironmentEffects {
   constructor(
     public height: (x: number, z: number) => number,
     public waterAt: (p: T.Vector3) => number | null,
+    public collision?: (from: T.Vector3, to: T.Vector3) => ParticleHit | null,
   ) {
     const geometry = new T.BufferGeometry();
     geometry.setAttribute('position', new T.BufferAttribute(this.positions, 3));
@@ -406,6 +436,9 @@ export class EnvironmentEffects {
       waterLevel = this.waterAt(centre),
       water = waterLevel !== null && centre.y - sim.tune.radius < waterLevel;
     return {
+      wetness: w.surface.wetness,
+      mudDepth: w.surface.mudDepth,
+      treadFactor: sim.tune.tread === 'trail' ? 1.15 : 0.9,
       contact: w.contact,
       load: w.load,
       omega: w.omega,
@@ -471,7 +504,8 @@ export class EnvironmentEffects {
       }
     }
     updateCondition(this.condition, samples, dt, sim.bodyScrape);
-    for (let t = 0; t < dt; t += 0.025) this.pool.update(Math.min(0.025, dt - t), this.height);
+    for (let t = 0; t < dt; t += 0.025)
+      this.pool.update(Math.min(0.025, dt - t), this.height, this.collision);
   }
   render(graphics: Graphics) {
     const grainPose = new T.Object3D();

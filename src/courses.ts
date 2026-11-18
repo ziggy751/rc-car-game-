@@ -1,6 +1,9 @@
+import { maps } from './map-definitions';
+import { laneX } from './map-layout';
 export type Difficulty = 'Easy' | 'Medium' | 'Hard' | 'Extreme';
 export type Course = {
   id: string;
+  map?: import('./map-definitions').MapId;
   legacy: number;
   name: string;
   type: string;
@@ -105,6 +108,41 @@ export const courses: Course[] = [
       '90–120 mm ledges with alternate shoulders, tilted slabs and tight gates. No artificial grip restrictions: use the line and the setup.',
   },
 ];
+for (const map of maps.slice(1))
+  for (let level = 0; level < 4; level++) {
+    const labels = ['Easy', 'Medium', 'Hard', 'Extreme'] as Difficulty[],
+      names = {
+        granite: ['Shoulder Line', 'Split Slab', 'High Traverse', 'Crown Spine'],
+        rainforest: ['Root Bypass', 'Creek Weave', 'Mud Gully', 'Flooded Roots'],
+        quarry: ['Gravel Bench', 'Cut Stone', 'Boulder Slot', 'Ridge Cut'],
+        competition: ['Club Line', 'Timber Test', 'Precision Loop', 'Final Gate'],
+      } as Record<string, string[]>;
+    const x = map.x + laneX[level];
+    courses.push({
+      id: `${map.id}-${level}`,
+      map: map.id,
+      legacy: courses.length,
+      name: names[map.id][level],
+      type: map.subtitle,
+      grade: labels[level],
+      distance: '6.0 m',
+      x,
+      z: map.z - 2.7,
+      reward: [150, 250, 450, 700][level],
+      color: map.color,
+      gateWidth: [0.56, 0.5, 0.45, 0.41][level],
+      gates: [
+        [-0.02, -1.25],
+        [0.04, 0.1],
+        [-0.03, 1.4],
+        [0.02, 2.7],
+      ].map(([dx, z]) => [x + dx, map.z + z]),
+      description: `${labels[level]} line through ${map.name}. Measured ${[20, 35, 55, 78][level]} mm obstacles with open approach shoulders.`,
+      zone: map.name,
+    });
+  }
+for (const course of courses) course.map ??= 'forest';
+
 export type CourseRecord = {
   bestTime: number | null;
   bestScore: number;

@@ -1,5 +1,6 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import { Quaternion, Vector3 } from 'three';
+import { ElectricDrive, motorConstants } from './dynamics/powertrain';
 import { recoverySupport } from './dynamics/collision';
 import { vehicleSpec } from './catalogue';
 import { defaults, type Tune } from './dynamics/tuning';
@@ -75,6 +76,7 @@ export class Simulation {
   contacts = 0;
   paused = false;
   surface = 'Test concrete';
+  electric = new ElectricDrive();
   motorTorque = 0;
   motorRPM = 0;
   motorCurrent = 0;
@@ -133,6 +135,32 @@ export class Simulation {
         this.body,
       ),
     );
+    // Narrow bumper tubes and sliders allow approach-angle and high-centering contact.
+    // Their mass is included in the chassis specification, so these collision skins add no mass.
+    for (const z of [-0.235, 0.24])
+      this.bodyColliders.push(
+        this.world.createCollider(
+          RAPIER.ColliderDesc.capsule(0.085, 0.0045)
+            .setRotation(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2))
+            .setTranslation(0, 0.053, z)
+            .setMass(0)
+            .setCollisionGroups(VEHICLE)
+            .setFriction(0.35),
+          this.body,
+        ),
+      );
+    for (const x of [-0.095, 0.095])
+      this.bodyColliders.push(
+        this.world.createCollider(
+          RAPIER.ColliderDesc.capsule(0.105, 0.004)
+            .setRotation(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2))
+            .setTranslation(x, 0.04, -0.005)
+            .setMass(0)
+            .setCollisionGroups(VEHICLE)
+            .setFriction(0.35),
+          this.body,
+        ),
+      );
     for (let a = 0; a < 2; a++) {
       const sign = a === 0 ? 1 : -1,
         z = sign * 0.162;
@@ -374,7 +402,8 @@ export class Simulation {
       const m = 0.13 + this.tune.wheelWeight,
         R = this.tune.radius,
         width = this.tune.tyreWidth,
-        spin = 0.5 * m * R * R,
+        spin =
+          0.5 * m * R * R + (motorConstants(this.tune).spec.rotorInertia * this.ratio ** 2) / 4,
         transverse = (m * (3 * R * R + width * width)) / 12;
       w.collider.setMassProperties(
         m,
@@ -455,6 +484,8 @@ export class Simulation {
       b.resetTorques(true);
     }
     this.steeringInput = this.throttle = this.steer = 0;
+    this.electric.current = this.electric.duty = this.electric.integral = 0;
+    this.motorTorque = this.motorCurrent = this.motorRPM = 0;
     this.servoTargets = [0, 0];
     this.contacts = 0;
     this.last.copy(origin);
@@ -546,7 +577,12 @@ export class Simulation {
       exponential(clamp(input.throttle, -1, 1), this.tune.throttleExpo) *
       this.tune.sensitivity *
       (input.precision || this.tune.precision ? 0.3 : 1);
-    this.throttle = approach(this.throttle, input.brake ? 0 : raw, raw === 0 ? 2.6 : 1.25, dt);
+    this.throttle = approach(
+      this.throttle,
+      input.brake ? 0 : raw,
+      raw === 0 ? 3 : this.tune.escPunch,
+      dt,
+    );
     const axes = this.wheels.map((w) =>
       new Vector3(1, 0, 0).applyQuaternion(q(w.carrier.rotation())),
     );
@@ -560,47 +596,49 @@ export class Simulation {
       1 - this.tune.rearUnderdrive,
     ];
     const mean = this.wheels.reduce((n, w, i) => n + w.omega / factors[i], 0) / 4;
-    const kv = this.tune.motorKind === 'brushed' ? 29700 / this.tune.turns : this.tune.kv;
-    const kt = 60 / (2 * Math.PI * kv),
-      ratio = this.ratio;
-    const motorSpeed = mean * ratio,
-      voltage = Math.max(this.tune.voltage * 0.75, this.tune.voltage - this.motorCurrent * 0.065);
-    const chargeScale = clamp(1 - this.usedAh / this.tune.capacity, 0.1, 1),
-      resistance = this.tune.motorKind === 'brushed' ? 1.2 : 0.8;
-    const emf = motorSpeed * kt,
-      commandVoltage = this.throttle * voltage * chargeScale;
-    let current = clamp((commandVoltage - emf) / resistance, -16, 16);
-    if (Math.abs(this.throttle) < 0.001 || input.brake) current = 0;
-    this.motorCurrent = Math.abs(current);
-    this.motorTorque = current * kt;
+    const ratio = this.ratio,
+      motorSpeed = mean * ratio;
+    const reflected = this.wheels.reduce(
+      (sum, w, i) =>
+        sum +
+        (1 / this.invInertia(w.body, axes[i]) +
+          (w.contact ? this.mass * 0.25 * this.tune.radius ** 2 : 0)) /
+          ratio ** 2,
+      0,
+    );
+    const shaftTorque = this.electric.step(
+      dt,
+      this.tune,
+      motorSpeed,
+      this.throttle,
+      input.brake,
+      reflected,
+    );
+    this.motorTorque = shaftTorque;
+    this.motorCurrent = Math.abs(this.electric.current);
     this.motorRPM = (motorSpeed * 60) / (2 * Math.PI);
-    this.usedAh += (this.motorCurrent * dt) / 3600;
-    const totalTorque = this.motorTorque * ratio * 0.74;
+    this.usedAh = this.electric.usedAh;
+    const totalTorque = shaftTorque * ratio;
     for (let a = 0; a < 2; a++)
       this.driveshaftAngles[a] +=
         (this.wheels[a * 2].omega + this.wheels[a * 2 + 1].omega) * 0.5 * this.tune.axleRatio * dt;
-    const brake = input.brake ? 0.35 : this.throttle === 0 ? this.tune.dragBrake * 0.17 : 0;
     this.wheels.forEach((w, i) => {
-      // Smooth static braking and rolling drag are torques, never target chassis velocities.
       const rolling = w.contact ? w.surface.rolling * w.load * this.tune.radius : 0;
-      const resistanceTorque =
-        -Math.tanh(w.omega * 0.5) * (brake + rolling + 0.0004 * Math.abs(w.omega));
-      const inverse = this.invInertia(w.body, axes[i]) + this.invInertia(this.body, axes[i]);
       const effectiveInertia =
         1 / this.invInertia(w.body, axes[i]) +
         (w.contact ? this.mass * 0.25 * this.tune.radius ** 2 : 0);
       const stopTorque = (Math.abs(w.omega) * effectiveInertia) / dt;
-      const drag = clamp(resistanceTorque, -stopTorque, stopTorque);
-      const electricalDamping = (kt * kt * ratio * ratio * 0.74) / (4 * resistance);
-      w.torque =
-        totalTorque /
-          4 /
-          factors[i] /
-          (1 + (electricalDamping / factors[i] ** 2) * dt * this.invInertia(w.body, axes[i])) +
-        drag;
+      const drag = clamp(
+        -Math.tanh(w.omega * 0.5) * (rolling + 0.0004 * Math.abs(w.omega)),
+        -stopTorque,
+        stopTorque,
+      );
+      // Electrical current already includes the reflected mechanical inertia in its implicit solve.
+      w.torque = totalTorque / 4 / factors[i] + drag;
       this.torque(w.body, this.body, axes[i], w.torque, dt);
     });
   }
+
   private solveAxleCoupling() {
     if (this.tune.differential !== 'locked') return;
     const factors = [
@@ -723,7 +761,15 @@ export class Simulation {
             ? 1.06
             : 0.96
           : 1;
-      const mu = w.surface.mu * compound * sensitivity * tread;
+      const moisture = w.surface.wetness ?? 0.75;
+      const baseMu =
+        w.surface.name === 'Mud'
+          ? Math.min(
+              w.surface.mu,
+              (0.65 * (1 - moisture * 0.6)) / (1 + (w.surface.mudDepth ?? 0.03) * 2),
+            )
+          : w.surface.mu;
+      const mu = baseMu * compound * sensitivity * tread;
       w.collider.setFriction(mu);
       w.ribs.forEach((r) => r.collider.setFriction(mu));
       const axis = new Vector3(1, 0, 0).applyQuaternion(q(w.carrier.rotation())),
@@ -827,6 +873,11 @@ export class Simulation {
       motorTorque: this.motorTorque,
       motorRPM: this.motorRPM,
       current: this.motorCurrent,
+      motorTemperature: this.electric.temperature,
+      batteryVoltage: this.electric.voltage,
+      batteryCurrent: this.electric.batteryAmps,
+      escDuty: this.electric.duty,
+      currentLimited: this.electric.limited,
       ratio: this.ratio,
       physicsMs: this.physicsMs,
       wheels: this.wheels.map((w, i) => ({

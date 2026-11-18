@@ -1,5 +1,11 @@
 export type Tune = {
   vehicle: 'r1' | 'c2' | 'w3' | 'b4';
+  powerSystem: 'scale' | 'torque' | 'sensored' | 'performance' | 'competition';
+  escCurrent: number;
+  batteryCurrent: number;
+  batteryResistance: number;
+  escPunch: number;
+  drivetrainEfficiency: number;
   sidewall: number;
   frontOverdrive: number;
   rearUnderdrive: number;
@@ -48,6 +54,12 @@ export type Tune = {
 };
 export const defaults: Tune = {
   vehicle: 'r1',
+  powerSystem: 'scale',
+  escCurrent: 28,
+  batteryCurrent: 25,
+  batteryResistance: 0.022,
+  escPunch: 1.8,
+  drivetrainEfficiency: 0.82,
   sidewall: 2400,
   frontOverdrive: 0,
   rearUnderdrive: 0,

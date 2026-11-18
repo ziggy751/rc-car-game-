@@ -43,10 +43,14 @@ try {
         bloom: g.render.bloom.enabled,
         vegetation: g.render.effective(g.state.graphics).vegetation,
         physicsMass: g.sim.mass,
+        mapWater: g.biomes.water.every(
+          (mesh) => mesh.visible === g.render.effective(g.state.graphics).water,
+        ),
         ...g.renderer.info.render,
       };
     });
     assert.equal(result.preset, preset);
+    assert.equal(result.mapWater, true);
     presets.push(result);
     console.log('PRESET', JSON.stringify(result));
   }

@@ -1,0 +1,923 @@
+:root {
+  --yellow: #e7a64c;
+  --muted: #a0a4a8;
+  --line: #ffffff18;
+  --panel: #1b1e21f5;
+  color: #e8e7e2;
+  background: #131518;
+}
+body {
+  background: #131518;
+}
+button,
+input,
+select {
+  border-radius: 1px;
+}
+header {
+  height: 84px;
+  padding: 0 3.6%;
+  gap: 5%;
+  background: #16191ce8;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #ffffff14;
+}
+.logo > span {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: 2.6px;
+}
+.logo small {
+  font:
+    6px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 1.35px;
+  color: #92979b;
+}
+.logo svg {
+  width: 35px;
+}
+.header-tools {
+  gap: 14px;
+}
+.credits {
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.7px;
+  color: #94999e;
+}
+.credits b {
+  font-size: 11px;
+}
+header nav {
+  gap: 24px;
+}
+header nav button {
+  font-size: 11px;
+  padding: 0 2px;
+}
+.vignette {
+  background:
+    linear-gradient(90deg, #111316d4, transparent 64%),
+    linear-gradient(0deg, #10121595, transparent 22%);
+}
+h1,
+h2,
+h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+h1 {
+  font-size: 37px;
+}
+.eyebrow {
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 1.5px;
+  color: #bdc0bf;
+}
+.primary {
+  background: #dfa44d;
+  color: #181a1b;
+  border: 1px solid #e0ac60;
+  border-radius: 1px;
+  box-shadow: none;
+  padding: 13px 15px;
+  font-size: 11px;
+  min-height: 39px;
+}
+.primary:hover {
+  background: #eab35b;
+  color: #121416;
+}
+.secondary {
+  background: #24272a;
+  color: #dddcd6;
+  border: 1px solid #ffffff20;
+  border-radius: 1px;
+  padding: 12px 14px;
+  font-size: 10px;
+}
+.primary:active,
+.secondary:active {
+  transform: translateY(1px);
+}
+.main-menu {
+  top: 23%;
+  width: 295px;
+}
+.main-menu h1 {
+  font-size: 49px;
+  line-height: 0.98;
+  letter-spacing: 0.5px;
+  margin: 22px 0 15px;
+}
+.main-menu > p {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #a5a9ad;
+  margin-bottom: 23px;
+  max-width: 250px;
+}
+.main-actions {
+  border-top: 1px solid #ffffff25;
+}
+.main-actions button {
+  padding: 14px 0;
+  font-size: 11px;
+  border-bottom: 1px solid #ffffff18;
+}
+.main-actions .primary {
+  margin: 14px 0 0;
+  padding: 13px 15px;
+}
+.main-actions button span {
+  font:
+    8px 'IBM Plex Mono',
+    monospace;
+  color: #969b9e;
+}
+.main-menu > small {
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.4px;
+  line-height: 1.7;
+  color: #8b939a;
+}
+.pause-menu {
+  padding: 25px;
+  background: #191c20f5;
+  border-color: #ffffff22;
+}
+.pause-menu h1 {
+  font-size: 36px;
+}
+.pause-menu .main-actions button {
+  padding: 11px 0;
+}
+.selection-panel {
+  top: 126px;
+  bottom: 60px;
+  width: 315px;
+  scrollbar-color: #777b7b #202326;
+}
+.selection-panel h1 {
+  font-size: 33px;
+  margin: 11px 0 10px;
+}
+.selection-panel > .intro {
+  color: #969da3;
+  font-size: 9px;
+  line-height: 1.7;
+  margin-bottom: 11px;
+}
+.selection-panel > .primary {
+  margin-bottom: 12px;
+  width: 100%;
+  min-height: 38px;
+}
+.vehicle-cards {
+  display: block;
+  border-top: 1px solid #ffffff20;
+}
+.vehicle-cards button {
+  display: grid;
+  grid-template-columns: 17px 1fr;
+  gap: 9px;
+  padding: 12px 11px;
+  width: 100%;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-bottom: 1px solid #ffffff15;
+  border-radius: 0;
+  background: #1c2023e8;
+}
+.vehicle-cards button.selected {
+  border-color: transparent;
+  border-left-color: #e3a34b;
+  background: #303235ed;
+  border-bottom-color: #ffffff15;
+}
+.paint-dot {
+  width: 8px;
+  height: 18px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.vehicle-cards small {
+  font:
+    6px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 1px;
+  color: #979fa5;
+}
+.vehicle-cards b {
+  font:
+    600 20px 'Barlow Condensed',
+    sans-serif;
+  margin: 3px 0;
+}
+.vehicle-cards div > span {
+  font:
+    6px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.6px;
+  color: #8f989f;
+}
+.vehicle-info {
+  margin-top: 12px;
+  padding: 17px;
+  background: #191d20ef;
+  border: 1px solid #ffffff18;
+  border-radius: 0;
+}
+.vehicle-info h2 {
+  font-size: 25px;
+  margin: 8px 0;
+}
+.vehicle-info p {
+  color: #a0a8ae;
+  font-size: 9px;
+}
+.vehicle-info > small {
+  font:
+    6px 'IBM Plex Mono',
+    monospace;
+  color: #c5a66e;
+}
+.vehicle-info dl {
+  margin: 12px 0;
+}
+.vehicle-info dl > div {
+  padding: 8px 0;
+  font-size: 8px;
+}
+.vehicle-info dd {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 7px;
+  color: #d8d9d4;
+}
+.vehicle-info dt {
+  color: #929ba2;
+}
+.vehicle-info .swatches {
+  padding: 5px 0;
+}
+.swatches button {
+  border-radius: 1px;
+  width: 23px;
+  height: 23px;
+}
+.inspection-note {
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 0.7px;
+  color: #949c9f;
+  bottom: 15%;
+}
+.inspection-note > span {
+  color: #c9ab74;
+}
+.inspection-note p {
+  font-size: 8px;
+  line-height: 1.6;
+}
+.workshop-panel {
+  top: 121px;
+  bottom: 62px;
+  width: 335px;
+}
+.workshop-panel h1 {
+  font-size: 34px;
+  margin: 9px 0;
+}
+.workshop-panel .intro {
+  font-size: 9px;
+  color: #9aa2a8;
+  margin-bottom: 12px;
+}
+.workshop-card {
+  background: #1a1e22ed;
+  border: 1px solid #ffffff1c;
+  border-radius: 1px;
+  padding: 17px;
+}
+.build-name h2 {
+  font-size: 23px;
+}
+.badge {
+  border-radius: 1px;
+  font:
+    8px 'IBM Plex Mono',
+    monospace;
+  color: #a3a9ad;
+}
+.tabs {
+  border-bottom: 1px solid #ffffff20;
+}
+.tabs button {
+  font-size: 10px;
+  padding: 10px 0;
+}
+.tabs button.active {
+  color: #e1a751;
+  border-bottom-color: #e1a751;
+}
+.tune-categories {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.tune-categories button {
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  padding: 7px 2px;
+  background: #23282c;
+  color: #a0a9af;
+  border: 1px solid #ffffff14;
+  border-radius: 0;
+}
+.tune-categories button.active {
+  background: #3a3022;
+  color: #edbd78;
+  border-color: #d8a05280;
+}
+#garage-fields label {
+  font-size: 9px;
+  color: #bec3c7;
+}
+.range-label output {
+  font:
+    8px 'IBM Plex Mono',
+    monospace;
+  color: #d5ac6d;
+}
+.workshop-card select,
+.graphics-menu select,
+.workshop-card input[type='text'] {
+  background: #252a2f;
+  border: 1px solid #ffffff18;
+  color: #dddeda;
+  border-radius: 1px;
+  padding: 9px;
+  font-size: 9px;
+}
+input[type='range'] {
+  accent-color: #dda44c;
+}
+.part-info {
+  font-size: 8px !important;
+  color: #929da5 !important;
+  line-height: 1.7;
+}
+.spec-strip {
+  border-color: #ffffff18;
+  color: #8c969d;
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+}
+.spec-strip b {
+  font-size: 12px;
+  color: #dadbd6;
+}
+.autosave {
+  font:
+    6px 'IBM Plex Mono',
+    monospace;
+  color: #818c92;
+}
+.preview-poses button {
+  background: #22282de8;
+  border-color: #a7b0b53d;
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  border-radius: 0;
+}
+.graphics-menu,
+.modal-card {
+  background: #191d21f5;
+  border: 1px solid #ffffff20;
+  border-radius: 1px;
+  backdrop-filter: blur(12px);
+}
+.graphics-menu > h1 {
+  font-size: 32px;
+}
+.graphics-menu label {
+  font-size: 10px;
+}
+.graphics-menu > small {
+  font-size: 8px;
+  color: #8d989f;
+}
+.binding-grid button {
+  background: #262c31;
+  border-radius: 0;
+  color: #b4bdc4;
+}
+.binding-grid kbd {
+  background: #32393f;
+}
+.map-panel {
+  top: 119px;
+  bottom: 30px;
+  max-height: calc(100vh - 145px);
+  left: 4%;
+  right: 4%;
+  padding: 0 8px;
+}
+.map-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  margin: 18px 0 25px;
+  border-bottom: 1px solid #ffffff27;
+}
+.map-tabs button {
+  padding: 13px 10px;
+  text-align: left;
+  font:
+    600 17px 'Barlow Condensed',
+    sans-serif;
+  border-bottom: 2px solid transparent;
+  color: #9ca5ad;
+}
+.map-tabs button small {
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  margin-right: 9px;
+  color: #68747f;
+}
+.map-tabs button.selected {
+  border-bottom-color: #dfaa58;
+  color: #e8dfcd;
+}
+.map-layout-new {
+  display: grid;
+  grid-template-columns: 29% 1fr;
+  gap: 45px;
+}
+.location-brief > small {
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: 1px;
+  color: #b9a480;
+}
+.location-brief h1 {
+  font-size: 40px;
+  margin: 12px 0;
+}
+.location-brief > p {
+  font-size: 10px;
+  line-height: 1.9;
+  color: #a3adb4;
+}
+.route-plan {
+  width: 100%;
+  max-height: 290px;
+  margin-top: 12px;
+  border: 1px solid #ffffff13;
+  background: #1a2022d9;
+}
+.route-plan text {
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  fill: #9aa5ad;
+  letter-spacing: 1px;
+}
+.route-heading {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0 12px;
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  color: #75838e;
+  letter-spacing: 1px;
+}
+.course-grid {
+  display: block;
+  border-top: 1px solid #ffffff20;
+}
+.course-tile {
+  display: grid;
+  grid-template-columns: 64px 1fr 64px;
+  align-items: start;
+  gap: 15px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-bottom: 1px solid #ffffff18;
+  border-radius: 0;
+  padding: 16px 14px;
+  background: #1c2227e3;
+  outline: none;
+}
+.course-tile.selected {
+  border-left-color: #dfa755;
+  background: #2b2c2ae8;
+  outline: none;
+}
+.course-tile h2 {
+  font-size: 22px;
+  margin: 0 0 5px;
+}
+.course-tile p {
+  font-size: 9px;
+  line-height: 1.6;
+  min-height: 0;
+  margin: 0 0 7px;
+  color: #9eabb4;
+}
+.course-tile > div {
+  display: block;
+  font-size: 9px;
+}
+.course-tile small {
+  font:
+    6px 'IBM Plex Mono',
+    monospace;
+  color: #8b99a4;
+  letter-spacing: 0.4px;
+}
+.course-tile > b {
+  font:
+    11px 'IBM Plex Mono',
+    monospace;
+  text-align: right;
+  color: #c1c7c9;
+}
+.grade-tag {
+  display: inline-block;
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  text-transform: uppercase;
+  color: #c7b990;
+  padding-top: 4px;
+  letter-spacing: 0.4px;
+}
+.grade-tag.easy {
+  color: #a2b59c;
+}
+.grade-tag.medium {
+  color: #c6bb8c;
+}
+.grade-tag.hard {
+  color: #d5a278;
+}
+.grade-tag.extreme {
+  color: #cd8b77;
+}
+.course-actions {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0;
+}
+.course-actions .primary,
+.course-actions .secondary {
+  width: auto;
+  flex: 1;
+  margin: 0;
+  font-size: 10px;
+}
+.test-stations {
+  background: #1c2227e6;
+  border-color: #ffffff20;
+  border-radius: 0;
+  font-size: 9px;
+}
+.test-stations summary {
+  color: #b7bfc4;
+  font-size: 9px;
+}
+.test-stations button {
+  font-size: 9px;
+  color: #9daab4;
+}
+body[data-playing='true'] #driving-hud {
+  bottom: 19px;
+  left: 22px;
+  right: 22px;
+  gap: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.hud-speed b {
+  font:
+    400 24px 'IBM Plex Mono',
+    monospace;
+  letter-spacing: -1px;
+}
+.hud-chip,
+.hud-actions button {
+  background: #191d21b8;
+  border-color: #ffffff26;
+  border-radius: 1px;
+  color: #c8d0d2;
+  font-size: 7px;
+}
+.hud-actions button {
+  padding: 8px 10px;
+}
+#hud-course {
+  font-size: 8px;
+  color: #cfb17d;
+}
+#toast {
+  background: #272e33f5;
+  border: 1px solid #a5afb533;
+  border-radius: 1px;
+  color: #dbdedb;
+  font-size: 10px;
+}
+.finish-comparison button {
+  font:
+    7px 'IBM Plex Mono',
+    monospace;
+  background: #242b30;
+  border-color: #ffffff24;
+}
+.footer,
+footer {
+  font-family: 'IBM Plex Mono', monospace;
+}
+#photo-tools {
+  background: #171b1fe8;
+  border: 1px solid #ffffff2b;
+  border-radius: 1px;
+}
+#photo-tools label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+}
+#photo-tools select {
+  background: #282f35;
+  border-color: #ffffff24;
+}
+body[data-mode='menu'] .vignette {
+  background: #101316c9;
+}
+@media (max-height: 760px) {
+  .selection-panel,
+  .workshop-panel {
+    top: 104px;
+  }
+  .map-panel {
+    top: 101px;
+    max-height: calc(100vh - 123px);
+  }
+  .map-tabs {
+    margin: 12px 0 18px;
+  }
+  .course-tile {
+    padding: 12px;
+  }
+  .course-tile h2 {
+    font-size: 20px;
+  }
+  .location-brief h1 {
+    font-size: 33px;
+  }
+  .main-menu {
+    top: 22%;
+  }
+  .main-menu h1 {
+    font-size: 42px;
+  }
+}
+@media (max-width: 800px) {
+  header {
+    gap: 20px;
+  }
+  .logo > span {
+    font-size: 22px;
+  }
+  .logo small {
+    font-size: 5px;
+  }
+  .logo svg {
+    width: 28px;
+  }
+  header nav {
+    gap: 13px;
+  }
+  .header-tools .credits {
+    display: none;
+  }
+  .map-layout-new {
+    gap: 22px;
+    grid-template-columns: 25% 1fr;
+  }
+  .course-tile {
+    grid-template-columns: 48px 1fr 45px;
+    gap: 8px;
+  }
+  .map-tabs button {
+    font-size: 14px;
+    padding: 10px 5px;
+  }
+  .map-tabs button small {
+    display: block;
+    margin: 0 0 3px;
+  }
+  .route-plan {
+    max-height: 220px;
+  }
+}
+@media (max-width: 700px) {
+  header {
+    height: 76px;
+    padding: 0 4%;
+    gap: 20px;
+  }
+  .logo > span {
+    font-size: 19px;
+  }
+  .logo small {
+    display: none;
+  }
+  .logo svg {
+    width: 23px;
+  }
+  header nav {
+    gap: 10px;
+  }
+  header nav button {
+    font-size: 9px;
+  }
+  .main-menu {
+    top: 20%;
+    width: 245px;
+  }
+  .main-menu h1 {
+    font-size: 42px;
+  }
+  .main-actions button {
+    padding: 13px 0;
+    font-size: 10px;
+  }
+  .selection-panel {
+    top: 103px;
+    bottom: 52px;
+    width: 250px;
+  }
+  .selection-panel h1 {
+    font-size: 29px;
+  }
+  .vehicle-cards button {
+    padding: 10px 7px;
+  }
+  .vehicle-cards b {
+    font-size: 18px;
+  }
+  .vehicle-info {
+    padding: 12px;
+  }
+  .vehicle-info dd {
+    font-size: 6px;
+  }
+  .workshop-panel {
+    top: 103px;
+    bottom: 58px;
+    width: 268px;
+  }
+  .workshop-panel h1 {
+    font-size: 29px;
+  }
+  .workshop-card {
+    padding: 13px;
+  }
+  .tune-categories {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .tune-categories button {
+    font-size: 6px;
+    padding: 6px 1px;
+  }
+  .map-panel {
+    top: 103px;
+    left: 4%;
+    right: 4%;
+    max-height: calc(100vh - 120px);
+  }
+  .map-tabs {
+    grid-template-columns: repeat(5, minmax(80px, 1fr));
+    overflow: auto;
+    max-width: 100%;
+    margin: 12px 0 19px;
+  }
+  .map-tabs button {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .map-layout-new {
+    display: block;
+  }
+  .location-brief {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12px;
+    margin-bottom: 20px;
+  }
+  .location-brief > small {
+    grid-column: 1 / -1;
+  }
+  .location-brief h1 {
+    font-size: 29px;
+    margin: 10px 0;
+  }
+  .location-brief > p {
+    font-size: 8px;
+    line-height: 1.6;
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .route-plan {
+    display: none;
+  }
+  .course-tile {
+    grid-template-columns: 44px 1fr 42px;
+    padding: 12px 8px;
+    gap: 8px;
+  }
+  .course-tile h2 {
+    font-size: 19px;
+  }
+  .course-tile p {
+    font-size: 8px;
+  }
+  .course-tile small {
+    font-size: 6px;
+  }
+  .course-tile > b {
+    font-size: 9px;
+  }
+  .grade-tag {
+    font-size: 6px;
+  }
+  .course-actions .primary,
+  .course-actions .secondary {
+    font-size: 8px;
+    padding: 12px 7px;
+  }
+  .graphics-menu {
+    width: 92%;
+    padding: 20px;
+  }
+  .graphics-menu h1 {
+    font-size: 29px;
+  }
+  .pause-menu {
+    width: 88%;
+    top: 12%;
+    padding: 20px;
+  }
+  .pause-menu h1 {
+    font-size: 32px;
+  }
+  body[data-playing='true'] #driving-hud {
+    left: 12px;
+    right: 12px;
+    bottom: 17px;
+  }
+  .hud-speed b {
+    font-size: 21px;
+  }
+  #hud-course {
+    font-size: 7px;
+    bottom: 45px;
+  }
+  .hud-actions button {
+    font-size: 6px;
+    padding: 8px;
+  }
+  .hud-chip {
+    font-size: 6px;
+  }
+  #touch button {
+    background: #232d35c2;
+    border-color: #ffffff3a;
+  }
+}
+
+body[data-mode='map'] .vignette,
+body[data-mode='guide'] .vignette,
+body[data-mode='settings'] .vignette {
+  background: #121619f5;
+}
+option {
+  background: #252a2f;
+  color: #dddeda;
+}

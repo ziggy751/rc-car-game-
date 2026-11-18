@@ -7,7 +7,13 @@ export type SurfaceName =
   | 'Mud'
   | 'Timber'
   | 'Test concrete';
-export type Surface = { name: SurfaceName; mu: number; rolling: number };
+export type Surface = {
+  name: SurfaceName;
+  mu: number;
+  rolling: number;
+  wetness?: number;
+  mudDepth?: number;
+};
 export const surfaces: Record<SurfaceName, Surface> = {
   'Dry granite': { name: 'Dry granite', mu: 1.0, rolling: 0.018 },
   'Wet rock': { name: 'Wet rock', mu: 0.45, rolling: 0.02 },

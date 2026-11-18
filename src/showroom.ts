@@ -5,12 +5,12 @@ export class Showroom {
   constructor() {
     const g = this.group;
     g.position.x = 100;
-    const dark = metal('#263332', 0.72, 0.25),
-      steel = metal('#5d6c6b', 0.42, 0.65),
+    const dark = metal('#252729', 0.72, 0.25),
+      steel = metal('#65696c', 0.42, 0.65),
       wood = metal('#695941', 0.84, 0);
     wood.map = noiseTexture('wood');
     const floor = new T.MeshStandardMaterial({
-      color: '#454d47',
+      color: '#505354',
       roughness: 0.7,
       metalness: 0.12,
       map: noiseTexture('rock', 512),
@@ -23,7 +23,7 @@ export class Showroom {
     stand.receiveShadow = true;
     mesh(
       new T.CylinderGeometry(0.38, 0.38, 0.005, 96),
-      metal('#182321', 0.82, 0.1),
+      metal('#202326', 0.82, 0.1),
       g,
       [0, 0.103, 0],
     );

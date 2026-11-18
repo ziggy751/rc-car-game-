@@ -1,7 +1,9 @@
 import * as T from 'three';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { surfaceMaterial, terrainMaterial } from './material-library';
 import { bendVegetation } from './environment-effects';
+import { regionAt, biomeHeight, mudBounds, type MapId } from './map-definitions';
 import { courses } from './courses';
 import { courseRocks, courseDistance, buildCourseMarkers } from './course-terrain';
 import { surfaces, type Surface } from './dynamics/surfaces';
@@ -21,7 +23,17 @@ export function groundHeight(x: number, z: number) {
     0.35 * Math.exp(-((x - 3) ** 2 + (z - 9) ** 2) / 10);
   const creek = -0.19 * Math.exp(-(((z - 3.7) / 0.46) ** 2));
   const blend = T.MathUtils.smoothstep(Math.hypot(x, z), 0.35, 0.75);
-  return (ridge + detail + hill + creek) * blend;
+  const original = (ridge + detail + hill + creek) * blend,
+    region = regionAt(x, z);
+  if (!region) return original;
+  const lx = x - region.x,
+    lz = z - region.z,
+    edge = T.MathUtils.smoothstep(5 - Math.max(Math.abs(lx), Math.abs(lz)), 0, 0.7);
+  let h = biomeHeight(region.id, lx, lz);
+  const mud = mudBounds(region.id);
+  if (mud && Math.abs(x - mud.x) < mud.width / 2 && Math.abs(z - mud.z) < mud.length / 2)
+    h -= mud.depth + 0.012;
+  return T.MathUtils.lerp(original, h, edge);
 }
 export function creekWaterHeight() {
   return Math.min(groundHeight(0, 3.7), groundHeight(0.65, 3.7)) + 0.085;
@@ -36,6 +48,7 @@ export function bridgeDeckHeight(z: number) {
 }
 export const trails = courses;
 export class Park {
+  activeMap: MapId = 'forest';
   sunOffset = new T.Vector3(-10, 16, -8);
   terrainWet = { value: 0 };
   plantUniforms: ReturnType<typeof bendVegetation> | null = null;
@@ -69,6 +82,17 @@ export class Park {
       const d = courseDistance(x, z);
       const color = new T.Color(d < 0.52 ? '#ae9672' : d < 0.85 ? '#6b7048' : '#53613b');
       if (Math.abs(z - 3.7) < 0.35) color.set('#635547');
+      const region = regionAt(x, z);
+      if (region)
+        color.set(
+          region.id === 'granite'
+            ? '#bbb5a7'
+            : region.id === 'quarry'
+              ? '#b6a488'
+              : region.id === 'competition'
+                ? '#929084'
+                : '#8b8062',
+        );
       color.multiplyScalar(0.85 + 0.15 * Math.sin(x * 17 + z * 8));
       colors.push(color.r, color.g, color.b);
     }
@@ -84,8 +108,9 @@ export class Park {
       return seed / 4294967296;
     };
     const makeRock = (x: number, z: number, sx: number, sy: number, sz: number, collide = true) => {
+      if (regionAt(x, z)) return;
       if (x > 5.5 && x < 16.5 && z > -13.5 && z < -0.5) return;
-      const g = new T.IcosahedronGeometry(1, 3);
+      const g = mergeVertices(new T.IcosahedronGeometry(1, 3));
       const p = g.attributes.position;
       for (let i = 0; i < p.count; i++) {
         const x = p.getX(i),
@@ -228,6 +253,7 @@ export class Park {
     for (let i = 0; i < 110; i++) {
       const x = (rand() - 0.5) * 33,
         z = (rand() - 0.5) * 38;
+      if (regionAt(x, z)) continue;
       if (courseDistance(x, z) < 0.85 || (x > 5.5 && x < 16.5 && z > -13.5 && z < -0.5)) continue;
       const y = groundHeight(x, z),
         h = 2.3 + rand() * 3.5,

@@ -1,3 +1,4 @@
+import { StuckMud } from './stuck-mud';
 import * as T from 'three';
 import { surfaceMaterial } from './material-library';
 import { weatherMaterial, type SoilUniforms } from './environment-effects';
@@ -22,6 +23,7 @@ export class Crawler {
     wheelCentres: { value: Array.from({ length: 4 }, () => new T.Vector3()) },
     vehicleInverse: { value: new T.Matrix4() },
   };
+  deposits: StuckMud;
   battery = new T.Group();
   root = new T.Group();
   shell = new T.Group();
@@ -224,6 +226,7 @@ export class Crawler {
     });
     for (const material of mats) weatherMaterial(material, this.soilUniforms);
     this.update([0.065, 0.065, 0.065, 0.065], 0, [0, 0, 0, 0]);
+    this.deposits = new StuckMud([this.root, ...this.wheels, ...this.axles]);
   }
   createWheel(rubber: T.Material, steel: T.Material, black: T.Material) {
     const w = new T.Group(),
@@ -401,7 +404,18 @@ export class Crawler {
       this.soilUniforms.wheelCentres.value[i].copy(w.position);
       w.quaternion.copy(inverse).multiply(wheel.rotation);
       w.children[0].rotation.set(0, 0, 0);
-      w.scale.set(sim.tune.tyreWidth / 0.044, sim.tune.radius / 0.059, sim.tune.radius / 0.059);
+      w.scale.setScalar(1);
+      // A tyre change keeps the beadlock diameter constant. Only rubber and tread resize.
+      this.tyreMeshes[i].scale.set(
+        sim.tune.radius / 0.059,
+        sim.tune.tyreWidth / 0.044,
+        sim.tune.radius / 0.059,
+      );
+      this.treadMeshes[i].scale.set(
+        sim.tune.tyreWidth / 0.044,
+        sim.tune.radius / 0.059,
+        sim.tune.radius / 0.059,
+      );
       const u = this.deformations[i].uniforms,
         state = sim.wheels[i];
       u.patchCount.value = state.patches.length;
@@ -479,6 +493,11 @@ export class Crawler {
   }
   setTyres(radius: number) {
     this.radius = radius;
-    for (const w of this.wheels) w.scale.setScalar(radius / 0.059);
+    this.tyreMeshes.forEach((m) => {
+      m.scale.x = m.scale.z = radius / 0.059;
+    });
+    this.treadMeshes.forEach((m) => {
+      m.scale.y = m.scale.z = radius / 0.059;
+    });
   }
 }

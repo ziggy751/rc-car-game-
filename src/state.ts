@@ -1,7 +1,7 @@
 import { validateGraphics, type Graphics } from './graphics';
 import { vehicles, vehicleTune, type VehicleId } from './catalogue';
 import { validateCondition, type SurfaceCondition } from './soiling';
-import type { CourseRecord } from './courses';
+import { courses, type CourseRecord } from './courses';
 import { isBindingCode } from './dynamics/controls';
 import { defaults, type Tune } from './dynamics/tuning';
 export type Action = 'forward' | 'reverse' | 'left' | 'right' | 'brake' | 'recover' | 'precision';
@@ -36,6 +36,11 @@ export function validateTune(value: unknown): Tune {
     out = { ...defaults };
   const bounds: Partial<Record<keyof Tune, [number, number]>> = {
     sidewall: [400, 8000],
+    escCurrent: [10, 80],
+    batteryCurrent: [10, 60],
+    batteryResistance: [0.008, 0.08],
+    escPunch: [0.5, 5],
+    drivetrainEfficiency: [0.6, 0.95],
     frontOverdrive: [0, 0.2],
     rearUnderdrive: [0, 0.2],
     ballast: [0, 0.3],
@@ -76,6 +81,7 @@ export function validateTune(value: unknown): Tune {
       (out as any)[key] = Math.max(min, Math.min(max, value));
   }
   const enums: Partial<Record<keyof Tune, string[]>> = {
+    powerSystem: ['scale', 'torque', 'sensored', 'performance', 'competition'],
     vehicle: vehicles.map((v) => v.id),
     tread: ['rock', 'trail'],
     compound: ['soft', 'trail', 'hard'],
@@ -90,6 +96,7 @@ export function validateTune(value: unknown): Tune {
   for (const key of ['body', 'audio', 'precision'] as const)
     if (typeof t[key] === 'boolean') out[key] = t[key];
   if (typeof t.paint === 'string' && /^#[0-9a-f]{6}$/i.test(t.paint)) out.paint = t.paint;
+  if (t.powerSystem === undefined && t.motorKind === 'brushless') out.powerSystem = 'sensored';
   if (t.rearSpring === undefined) out.rearSpring = out.spring;
   if (t.rearDamping === undefined) out.rearDamping = out.damping;
   if (t.rebound === undefined) out.rebound = out.damping * 3.5;
@@ -143,7 +150,7 @@ export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): Sav
     if (data.records && typeof data.records === 'object')
       for (const [id, record] of Object.entries(data.records) as [string, any][]) {
         if (!record || typeof record !== 'object') continue;
-        if (!['fern-creek', 'granite-spine', 'timberline', 'needle-point'].includes(id)) continue;
+        if (!courses.some((c) => c.id === id)) continue;
         base.records[id] = {
           bestTime:
             typeof record.bestTime === 'number' &&
@@ -163,7 +170,7 @@ export function loadState(storage: Pick<Storage, 'getItem'> = localStorage): Sav
       ? [
           ...new Set<number>(
             data.completed.filter(
-              (x: unknown) => Number.isInteger(x) && Number(x) >= 0 && Number(x) < 4,
+              (x: unknown) => Number.isInteger(x) && Number(x) >= 0 && Number(x) < courses.length,
             ),
           ),
         ]

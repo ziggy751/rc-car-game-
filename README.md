@@ -1,8 +1,8 @@
 # Ridgebound RC
 
-A browser RC crawler simulator using TypeScript, Three.js and Rapier. Four immediately available original hobby-grade rigs, separate selection garage and tuning workshop, four RC-scale courses, compliant tyre contacts and contact-driven environmental effects are implemented. The art is generated 3D geometry and PBR materials; the supplied reference images stay outside the game bundle. This remains a simulator under development, with reduced tyre/soil/water models and further production art work needed.
+A browser RC crawler simulator using TypeScript, Three.js and Rapier. Four immediately available original hobby-grade rigs, separate selection garage and tuning workshop, five connected RC-scale locations and twenty courses, compliant tyre contacts and contact-driven environmental effects are implemented. The art is generated 3D geometry and PBR materials; the supplied reference images stay outside the game bundle. This remains a simulator under development, with reduced tyre/soil/water models and further production art work needed.
 
-See [the current open-garage and realism report](docs/OPEN_GARAGE_REALISM.md) for the reference audit, implemented systems, validation and remaining work.
+See [the power, map and interface rebuild report](docs/POWER_MAP_UI_REBUILD.md) for implemented systems, measurements and remaining work, and [the open-garage report](docs/OPEN_GARAGE_REALISM.md) for the previous reference audit.
 
 ## Run
 
@@ -19,6 +19,7 @@ Vite serves on port 5173. Open the running app through your development environm
 npm test              # Physical regression and persistence checks
 npm run build        # TypeScript check + static production bundle
 npm run preview      # Preview the production build
+npm run test:power-maps # Five motor setups, physical map traversal, mud and preserved progress
 npm run test:mud     # Rendered-pixel regression for localized mud; dev server required
 npm run test:realism # All free vehicles, new tuning, zoned mud, photo and graphics controls
 npm run test:browser # Run with the dev server already running
@@ -53,7 +54,7 @@ The existing park, workshop, shell inspection, paint, saved builds, route gates,
 
 Use the **trail map → Vehicle physics proving ground** for turning circles, articulation, inclines and surface lanes. **F2** toggles collision geometry and physical telemetry. **Shift** holds precision crawl mode. **Settings → Transmitter bindings** remaps driving controls. C now cycles six views, including suspension and cinematic cameras.
 
-Read the [complete physics report](docs/PHYSICS_OVERHAUL.md) and [verification record](docs/VALIDATION.md). Important limits: radial tyre compliance is a reduced model, differential locking uses projected angular coupling rather than full meshed gears, and the servo's damping is not an exact electronic current limit. Alternate three-link/Panhard chassis, soil deformation and measured physical-crawler calibration still require development. The procedural art remains short of the supplied photorealistic references. All four original rigs and every tuning part are free; purchase/sale restrictions were removed. A broad vehicle collection, full open world and online accounts require further work.
+Read the [complete physics report](docs/PHYSICS_OVERHAUL.md) and [verification record](docs/VALIDATION.md). Important limits: radial tyre compliance is a reduced model, differential locking uses projected angular coupling rather than full meshed gears, and the servo's damping is not an exact electronic current limit. Alternate three-link/Panhard chassis and measured physical-crawler calibration still require development. Hollow Creek now includes a physical deformable soil patch. The procedural art remains short of the supplied photorealistic references. All four original rigs and every tuning part are free; purchase/sale restrictions were removed. A broad vehicle collection, full open world and online accounts require further work.
 
 ## Architecture and references
 

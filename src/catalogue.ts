@@ -26,7 +26,7 @@ export const vehicles: VehicleSpec[] = [
     paint: '#496d62',
     description:
       'A hard-shell short-cab trail rig. Steel ladder rails, four-link axles and a serviceable 540 drivetrain.',
-    preset: { paint: '#496d62' },
+    preset: { paint: '#496d62', powerSystem: 'scale' },
   },
   {
     id: 'c2',
@@ -42,6 +42,13 @@ export const vehicles: VehicleSpec[] = [
       'An exposed competition chassis with a low battery tray, lighter cage and longer-travel setup. Same serviceable axle platform; a different centre of gravity.',
     preset: {
       paint: '#b36535',
+      powerSystem: 'competition',
+      motorKind: 'brushless',
+      kv: 1600,
+      escCurrent: 50,
+      batteryCurrent: 35,
+      escPunch: 2.8,
+      gearRatio: 24,
       batteryHeight: 0.045,
       batteryPosition: 0.025,
       foam: 1800,
@@ -65,6 +72,12 @@ export const vehicles: VehicleSpec[] = [
       'A closed four-door utility wagon with a ribbed cargo roof, rear-mounted spare and portal housings. A heavier shell and forward battery give it a distinct balance.',
     preset: {
       paint: '#a5afa0',
+      powerSystem: 'torque',
+      turns: 35,
+      voltage: 11.1,
+      escCurrent: 38,
+      batteryCurrent: 30,
+      escPunch: 1.6,
       axleType: 'portal',
       batteryPosition: 0.055,
       batteryHeight: 0.055,
@@ -89,6 +102,13 @@ export const vehicles: VehicleSpec[] = [
       'A single-seat buggy with a narrow cockpit, swept nose and exposed rear service cage. Larger supported tyres, long shock stroke and portal clearance suit technical boulders.',
     preset: {
       paint: '#518a8e',
+      powerSystem: 'performance',
+      motorKind: 'brushless',
+      kv: 2300,
+      voltage: 11.1,
+      escCurrent: 60,
+      batteryCurrent: 45,
+      escPunch: 3.2,
       axleType: 'portal',
       batteryHeight: 0.045,
       batteryPosition: -0.025,
@@ -100,7 +120,7 @@ export const vehicles: VehicleSpec[] = [
       rearTravel: 0.08,
       foam: 1900,
       sidewall: 2600,
-      gearRatio: 26,
+      gearRatio: 16,
     },
   },
 ];

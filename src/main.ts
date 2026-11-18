@@ -1,11 +1,12 @@
 import '@fontsource/dm-sans/latin-400.css';
 import '@fontsource/dm-sans/latin-500.css';
 import '@fontsource/dm-sans/latin-700.css';
-import '@fontsource/manrope/latin-400.css';
-import '@fontsource/manrope/latin-500.css';
-import '@fontsource/manrope/latin-800.css';
+import '@fontsource/barlow-condensed/latin-600.css';
+import '@fontsource/ibm-plex-mono/latin-400.css';
 import * as T from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
+import { MapEnvironments } from './map-environments';
+import { maps, regionAt, mapWater, type MapId } from './map-definitions';
 import { ContactAudio } from './contact-audio';
 import { validateCondition, averageMud } from './soiling';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -29,6 +30,7 @@ import { Rendering } from './rendering';
 import { surfaceMaterial } from './material-library';
 import './style.css';
 import './upgrade.css';
+import './field-ui.css';
 
 async function boot() {
   const state = loadState(),
@@ -52,25 +54,47 @@ async function boot() {
   const world = new RAPIER.World({ x: 0, y: -9.81, z: 0 }),
     park = new Park(scene, world),
     testArea = new TestArea(world),
-    showroom = new Showroom();
+    showroom = new Showroom(),
+    biomes = new MapEnvironments(scene, world);
   scene.add(testArea.group, showroom.group);
   batchStatic(park.vegetation);
   park.vegetation.removeFromParent();
   batchStatic(park.group);
   park.group.add(park.vegetation);
+  for (const group of biomes.groups.values()) batchStatic(group);
   batchStatic(park.garage);
   batchStatic(testArea.group);
   batchStatic(showroom.group);
   const render = new Rendering(renderer, scene, camera, park, roomEnv.texture);
   render.weather(state.weather);
   const heightAt = (x: number, z: number) =>
-    x > 6 && x < 16 && z > -13 && z < -1 ? 0 : groundHeight(x, z);
+    x > 6 && x < 16 && z > -13 && z < -1
+      ? 0
+      : biomes.mud.contains(x, z)
+        ? biomes.mud.height(x, z)
+        : groundHeight(x, z);
   const surfaceAt = (p: RAPIER.Vector, c: RAPIER.Collider) => {
-    const known = park.materialSurfaces.get(c.handle) ?? testArea.materials.get(c.handle);
+    if (c.handle === biomes.mud.collider.handle) return biomes.mud.sampleSurface(p.x, p.z);
+    const known =
+      biomes.materials.get(c.handle) ??
+      park.materialSurfaces.get(c.handle) ??
+      testArea.materials.get(c.handle);
     const poolLevel = testArea.waterLevel(p.x, p.z);
     if (poolLevel !== null && p.y < poolLevel) return surfaces['Wet rock'];
+    const region = regionAt(p.x, p.z);
+    const biomeSurface =
+      region?.id === 'granite'
+        ? surfaces['Dry granite']
+        : region?.id === 'quarry'
+          ? surfaces.Gravel
+          : region?.id === 'competition'
+            ? surfaces['Test concrete']
+            : region?.id === 'rainforest'
+              ? { ...surfaces.Mud, wetness: 0.65, mudDepth: 0.015 }
+              : null;
     let surface =
       known ??
+      biomeSurface ??
       (Math.abs(p.z - 3.7) < 0.43
         ? surfaces['Wet rock']
         : p.x > -0.6 && p.x < 0.9 && p.z > 4.4 && p.z < 5.7
@@ -102,9 +126,53 @@ async function boot() {
   const effects = new EnvironmentEffects(
     heightAt,
     (p) =>
+      mapWater(p.x, p.z) ??
       testArea.waterLevel(p.x, p.z) ??
       (Math.abs(p.z - 3.7) < 0.39 && Math.abs(p.x) < 12.5 ? park.water.position.y : null),
   );
+  effects.collision = (from, to) => {
+    const delta = to.clone().sub(from),
+      distance = delta.length();
+    if (distance < 0.00001) return null;
+    const hit = world.castRayAndGetNormal(
+      new RAPIER.Ray(from, delta.divideScalar(distance)),
+      distance,
+      true,
+    );
+    if (!hit) return null;
+    const parent = hit.collider.parent();
+    let actor: number | undefined;
+    if (parent) {
+      if (parent.handle === sim.body.handle) actor = 0;
+      const wi = sim.wheels.findIndex((w) => w.body.handle === parent.handle);
+      if (wi >= 0) actor = wi + 1;
+      const ai = sim.axles.findIndex((a) => a.handle === parent.handle);
+      if (ai >= 0) actor = ai + 5;
+    }
+    return {
+      point: from.clone().addScaledVector(delta, hit.timeOfImpact),
+      normal: new T.Vector3(hit.normal.x, hit.normal.y, hit.normal.z),
+      actor,
+    };
+  };
+  effects.pool.onImpact = (grain, hit) => {
+    if (grain.kind !== 'mud' || hit.actor === undefined || !car) return;
+    const actor = hit.actor,
+      body =
+        actor === 0 ? sim.body : actor <= 4 ? sim.wheels[actor - 1].body : sim.axles[actor - 5];
+    const rotation = new T.Quaternion(
+        body.rotation().x,
+        body.rotation().y,
+        body.rotation().z,
+        body.rotation().w,
+      ).invert(),
+      point = hit.point
+        .clone()
+        .sub(new T.Vector3(body.translation().x, body.translation().y, body.translation().z))
+        .applyQuaternion(rotation),
+      normal = hit.normal.clone().applyQuaternion(rotation);
+    car.deposits.add(actor, point, normal, grain.size);
+  };
   effects.condition = validateCondition(
     state.condition[state.tune.vehicle],
     state.dirt[state.tune.vehicle] ?? 0,
@@ -120,6 +188,7 @@ async function boot() {
     previewClock = new FixedClock(),
     keys = new Set<string>();
   let sceneMode: 'trail' | 'garage' | 'workshop' = 'garage',
+    activeMap: MapId = 'forest',
     run: CourseRun | null = null,
     camMode = state.preferences.camera,
     debug = false,
@@ -240,6 +309,7 @@ async function boot() {
   ui.onClean = () => {
     cleanPreview = false;
     effects.clean();
+    car.deposits.clean();
     state.dirt[state.tune.vehicle] = 0;
     persist();
   };
@@ -270,6 +340,9 @@ async function boot() {
   };
   ui.onStart = () => {
     const course = trails[ui.activeTrail];
+    activeMap = course.map ?? 'forest';
+    park.activeMap = activeMap;
+    render.lastKey = '';
     sim.reset(course.x, course.z);
     sim.elapsed = 0;
     run = new CourseRun(course);
@@ -278,6 +351,9 @@ async function boot() {
   };
   ui.onFreeRoam = () => {
     const course = trails[ui.activeTrail];
+    activeMap = course.map ?? 'forest';
+    park.activeMap = activeMap;
+    render.lastKey = '';
     sim.reset(course.x, course.z);
     run = null;
     ui.started = true;
@@ -290,6 +366,9 @@ async function boot() {
   };
   ui.onTestStation = (index) => {
     const station = testStations[index];
+    activeMap = 'forest';
+    park.activeMap = 'forest';
+    render.lastKey = '';
     sim.reset(station.x, station.z);
     run = null;
     ui.started = true;
@@ -569,6 +648,7 @@ async function boot() {
       ? (clock.reset(), 1)
       : clock.advance(frameDt, (step) => {
           sim.step(step, input);
+          biomes.step(step, sim);
           effects.step(step, sim, graphics);
           courseStep(step);
         });
@@ -593,6 +673,7 @@ async function boot() {
       }
     } else car.sync(sim, sim.pose(alpha));
     car.root.updateMatrixWorld(true);
+    if (!indoor && !sim.paused) car.deposits.wash(Math.min(dt, 0.1), effects.waterAt);
     car.soilUniforms.vehicleInverse.value.copy(car.root.matrixWorld).invert();
     car.setVisualDetail(graphics.wheelDetail);
     if (!graphics.tyreDeformation)
@@ -615,6 +696,7 @@ async function boot() {
     car.soilUniforms.zones.value.set(showDirt ? finish.mud : Array(8).fill(0));
     car.soilUniforms.dust.value = showDirt ? finish.dust : 0;
     car.soilUniforms.wear.value = state.preferences.visualWear && !cleanPreview ? finish.scuffs : 0;
+    car.deposits.show(showDirt, finish.wet);
     park.group.visible = !indoor;
     testArea.group.visible = !indoor;
     showroom.group.visible = sceneMode === 'garage';
@@ -673,6 +755,8 @@ async function boot() {
     lamps.forEach((l) => (l.visible = state.weather === 'Night' && !indoor));
     park.update(now / 1000, indoor ? new T.Vector3() : car.root.position);
     render.apply(state.graphics, indoor);
+    biomes.show(activeMap, graphics.vegetation, indoor, graphics.water);
+    biomes.sync();
     if (!graphics.fpsLimit || now - lastRender >= 1000 / graphics.fpsLimit - 0.5) {
       render.observe((now - lastRender) / 1000 || dt, state.graphics);
       render.render(
@@ -779,6 +863,7 @@ async function boot() {
     },
     park,
     testArea,
+    biomes,
     ui,
     state,
     renderer,

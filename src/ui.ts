@@ -1,3 +1,5 @@
+import { maps, mapSpec, type MapId } from './map-definitions';
+import { powerSystems, powerSpec, motorConstants } from './dynamics/powertrain';
 import type { Save } from './state';
 import type { Tune } from './physics';
 import { vehicles, vehicleSpec, vehicleTune, tuningPresets, type VehicleId } from './catalogue';
@@ -126,7 +128,7 @@ export class UI {
       this.click('guide', () => this.setMode('guide'));
       this.click('inspect', () => this.setMode('garage'));
     } else if (this.mode === 'workshop') {
-      panel.innerHTML = `<section class="workshop-panel"><div class="eyebrow">RIDGEBOUND WORKS / BUILD 01</div><h1>The workshop<span>.</span></h1><p class="intro">Measured settings. Immediate, physical feedback.</p><div class="workshop-card"><div class="build-name"><div><small>ORIGINAL SCALE CRAWLER</small><h2>${vehicleSpec(t.vehicle).name}</h2></div><span class="badge">1:10</span></div><div class="tabs"><button class="active" id="tab-tune">Tuning</button><button id="tab-style">Appearance</button><button id="tab-builds">My builds</button></div><div class="tune-categories">${['Tyres', 'Suspension', 'Motor', 'Drivetrain', 'Weight', 'Steering'].map((category) => `<button data-category="${category}" class="${this.tuningCategory === category ? 'active' : ''}">${category}</button>`).join('')}</div><div id="garage-fields"></div><div class="spec-strip"><span><b id="mass-stat">—</b> kg</span><span><b>324</b> mm WB</span><span><b>4</b> driven wheels</span></div><button id="drive" class="primary">Test your setup <span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></button><p class="autosave">● Changes saved on this device</p></div></section><div class="inspection-note"><span>360° INSPECTION</span><p>Drag to orbit · Scroll to inspect<br>Physical bench preview · drag to inspect</p><div class="preview-poses"><button data-pose="flat">Flat</button><button data-pose="articulation">Articulation</button><button data-pose="rock">Tyre on rock</button></div></div>`;
+      panel.innerHTML = `<section class="workshop-panel"><div class="eyebrow">RIDGEBOUND WORKS / BUILD 01</div><h1>The workshop<span>.</span></h1><p class="intro">Measured settings. Immediate, physical feedback.</p><div class="workshop-card"><div class="build-name"><div><small>ORIGINAL SCALE CRAWLER</small><h2>${vehicleSpec(t.vehicle).name}</h2></div><span class="badge">1:10</span></div><div class="tabs"><button class="active" id="tab-tune">Tuning</button><button id="tab-style">Appearance</button><button id="tab-builds">My builds</button></div><div class="tune-categories">${['Tyres', 'Suspension', 'Motor', 'Drivetrain', 'Steering', 'Weight', 'Electronics'].map((category) => `<button data-category="${category}" class="${this.tuningCategory === category ? 'active' : ''}">${category === 'Drivetrain' ? 'Gearing' : category}</button>`).join('')}</div><div id="garage-fields"></div><div class="spec-strip"><span><b id="mass-stat">—</b> kg</span><span><b>324</b> mm WB</span><span><b>4</b> driven wheels</span></div><button id="drive" class="primary">Test your setup <span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></button><p class="autosave">● Changes saved on this device</p></div></section><div class="inspection-note"><span>360° INSPECTION</span><p>Drag to orbit · Scroll to inspect<br>Physical bench preview · drag to inspect</p><div class="preview-poses"><button data-pose="flat">Flat</button><button data-pose="articulation">Articulation</button><button data-pose="rock">Tyre on rock</button></div></div>`;
       panel
         .querySelectorAll<HTMLElement>('[data-pose]')
         .forEach((button) => (button.onclick = () => this.onPreviewPose(button.dataset.pose!)));
@@ -143,14 +145,31 @@ export class UI {
       this.click('tab-builds', () => this.renderTune('builds'));
       this.click('drive', () => this.onTestStation(1));
     } else if (this.mode === 'map') {
-      panel.innerHTML = `<section class="map-panel"><div class="eyebrow">SILVER PINE / MINIATURE CRAWLING</div><h1>A line for every setup<span>.</span></h1><p class="intro">Four authored courses, measured in millimetres. No oversized vehicle roads.</p><div class="course-grid">${trails
-        .map((course, index) => {
+      const currentMap = mapSpec(trail.map ?? 'forest');
+      const localCourses = trails
+        .map((course, index) => ({ course, index }))
+        .filter(({ course }) => course.map === currentMap.id);
+      const mapPaths = localCourses
+        .map(({ course }) => {
+          const p = [[course.x, course.z], ...course.gates];
+          return `<polyline points="${p.map(([x, z]) => `${150 + (x - currentMap.x) * 22},${150 - (z - currentMap.z) * 22}`).join(' ')}" fill="none" stroke="${course.id === trail.id ? '#e6a84f' : '#6c7378'}" stroke-width="${course.id === trail.id ? 3 : 1.5}"/>`;
+        })
+        .join('');
+      panel.innerHTML = `<section class="map-panel"><div class="eyebrow">FIELD LOCATIONS / ALL ACCESS</div><div class="map-tabs">${maps.map((map, i) => `<button data-map="${map.id}" class="${currentMap.id === map.id ? 'selected' : ''}"><small>0${i + 1}</small>${map.name}</button>`).join('')}</div><div class="map-layout-new"><div class="location-brief"><small>${currentMap.subtitle}</small><h1>${currentMap.name}</h1><p>${currentMap.description}</p><svg class="route-plan" viewBox="0 0 300 300" aria-label="Course plan"><defs><pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M22 0H0V22" fill="none" stroke="#ffffff0b" stroke-width=".5"/></pattern></defs><rect width="300" height="300" fill="url(#grid)"/>${mapPaths}<text x="18" y="24">N ↑</text><text x="18" y="282">1:10 / ROUTE PLAN</text></svg></div><div class="route-browser"><div class="route-heading"><span>COURSE / DIFFICULTY</span><span>PERSONAL BEST</span></div><div class="course-grid">${localCourses
+        .map(({ course, index }) => {
           const record = this.state.records[course.id];
-          return `<button class="course-tile ${this.activeTrail === index ? 'selected' : ''}" data-trail="${index}" style="--course:${course.color}"><small>${course.zone.toUpperCase()} / ${course.grade.toUpperCase()}</small><h2>${course.name}</h2><p>${course.description}</p><div><span>${course.distance} · ${Math.round(course.gateWidth * 1000)} mm gates</span><b>${course.reward} points</b></div><footer>${record?.bestTime ? `Best ${record.bestTime.toFixed(1)} s · ${record.bestScore} points` : 'No timed record yet'}</footer></button>`;
+          return `<button class="course-tile ${this.activeTrail === index ? 'selected' : ''}" data-trail="${index}"><span class="grade-tag ${course.grade.toLowerCase()}">${course.grade}</span><div><h2>${course.name}</h2><p>${course.description}</p><small>${course.distance} / ${Math.round(course.gateWidth * 1000)} mm gates</small></div><b>${record?.bestTime ? record.bestTime.toFixed(1) + ' s' : '—'}</b></button>`;
         })
         .join(
           '',
-        )}</div><div class="course-actions"><button class="primary" id="drive-course">Drive ${trail.name} ↗</button><button class="secondary" id="free-roam">Free roam · no timer</button></div><details class="test-stations"><summary>Vehicle physics proving ground</summary>${testStations.map((station, i) => `<button data-station="${i}">${station.name} →</button>`).join('')}</details></section>`;
+        )}</div><div class="course-actions"><button id="drive-course" class="primary">Start timed course</button><button id="free-roam" class="secondary">Explore freely</button></div><details class="test-stations"><summary>Engineering test ground</summary>${testStations.map((station, i) => `<button data-station="${i}">${station.name}</button>`).join('')}</details></div></div></section>`;
+      panel.querySelectorAll<HTMLElement>('[data-map]').forEach(
+        (button) =>
+          (button.onclick = () => {
+            this.activeTrail = trails.findIndex((c) => c.map === button.dataset.map);
+            this.render();
+          }),
+      );
       panel.querySelectorAll<HTMLElement>('[data-trail]').forEach(
         (button) =>
           (button.onclick = () => {
@@ -255,6 +274,11 @@ export class UI {
         ['sensitivity', 'Throttle sensitivity', 0.2, 1, 0.05, ''],
         ['turns', 'Brushed motor winding', 20, 55, 1, 'T'],
         ['kv', 'Brushless motor KV', 800, 2500, 100, 'RPM/V'],
+        ['escCurrent', 'ESC phase current limit', 10, 80, 1, 'A'],
+        ['batteryCurrent', 'Battery current limit', 10, 60, 1, 'A'],
+        ['batteryResistance', 'Pack resistance', 8, 80, 1, 'mΩ', 1000],
+        ['escPunch', 'Throttle slew', 0.5, 5, 0.1, '/s'],
+        ['drivetrainEfficiency', 'Drivetrain efficiency', 60, 95, 1, '%', 100],
       ];
       const groups: Record<string, string[]> = {
         Tyres: ['radius', 'tyreWidth', 'foam', 'sidewall'],
@@ -274,6 +298,14 @@ export class UI {
         Drivetrain: ['gearRatio', 'axleRatio', 'frontOverdrive', 'rearUnderdrive'],
         Weight: ['batteryPosition', 'batteryHeight', 'wheelWeight', 'ballast', 'ballastPosition'],
         Steering: ['servoRate', 'servoTorque', 'endpoint', 'steeringExpo'],
+        Electronics: [
+          'escCurrent',
+          'batteryCurrent',
+          'batteryResistance',
+          'escPunch',
+          'drivetrainEfficiency',
+          'dragBrake',
+        ],
       };
       let fields = '';
       if (this.tuningCategory === 'Tyres')
@@ -287,6 +319,12 @@ export class UI {
           ['trail', 'Trail rubber'],
           ['hard', 'Hard compound'],
         ]);
+      if (this.tuningCategory === 'Motor')
+        fields += select(
+          'powerSystem',
+          'Power system',
+          powerSystems.map((p) => [p.id, p.name]),
+        );
       if (this.tuningCategory === 'Motor')
         fields += select('motorKind', 'Motor technology', [
           ['brushed', '540 brushed'],
@@ -325,7 +363,7 @@ export class UI {
       el.innerHTML =
         `<label>Setup recipe<select id="setup-preset"><option value="">Choose a physical preset…</option>${tuningPresets.map((preset, i) => `<option value="${i}">${preset.name}</option>`).join('')}</select></label>` +
         fields +
-        `<label class="toggle-row">Precision crawl<input type="checkbox" id="precision" ${t.precision ? 'checked' : ''}></label><p class="part-info">Contact load and these stiffness values drive both collision compliance and visible rubber deformation.</p>`;
+        `<label class="toggle-row">Precision crawl<input type="checkbox" id="precision" ${t.precision ? 'checked' : ''}></label><p class="part-info">${this.tuningCategory === 'Motor' ? `${Math.round(motorConstants(t).kv)} KV · ${(motorConstants(t).kt * 1000).toFixed(1)} mN·m/A · ${Math.round(motorConstants(t).kv * t.voltage).toLocaleString()} nominal no-load RPM. ${powerSpec(t).sensored ? 'Sensored ESC compensates for load at low shaft speeds.' : 'Brushed PWM responds directly to winding voltage and load.'}` : this.tuningCategory === 'Electronics' ? 'Phase current limits motor torque; battery current and pack resistance limit input power. F2 shows actual current, voltage and temperature.' : 'Physical settings change contact, articulation and the live test response.'}</p>`;
       if (document.getElementById('preview-steer'))
         document.getElementById('preview-steer')!.oninput = (e) => {
           const value = Number((e.target as HTMLInputElement).value);
@@ -340,10 +378,19 @@ export class UI {
         this.renderTune('tune');
         this.toast(tuningPresets[Number(value)].description);
       };
+      if (document.getElementById('powerSystem'))
+        document.getElementById('powerSystem')!.onchange = (e) => {
+          const id = (e.target as HTMLSelectElement).value as Tune['powerSystem'];
+          Object.assign(t, powerSystems.find((p) => p.id === id)!.preset, { powerSystem: id });
+          this.onTune();
+          this.renderTune('tune');
+        };
       for (const key of ['compound', 'tread', 'motor', 'motorKind', 'differential', 'axleType'])
         if (document.getElementById(key))
           document.getElementById(key)!.onchange = (e) => {
             (t as any)[key] = (e.target as HTMLSelectElement).value;
+            if (key === 'motorKind')
+              t.powerSystem = t.motorKind === 'brushed' ? 'scale' : 'sensored';
             this.onTune();
           };
       for (const [key, , , , , unit, factor = 1] of ranges)
@@ -406,10 +453,16 @@ export class UI {
   }
   renderMenu(panel: HTMLElement) {
     const paused = this.mode === 'menu';
-    panel.innerHTML = `<section class="main-menu ${paused ? 'pause-menu' : ''}"><div class="eyebrow">${paused ? 'TRANSMITTER PAUSED' : 'RIDGEBOUND / FIELD WORKS'}</div><h1>${paused ? 'Take a breath.' : 'Built small.<br><em>Go further.</em>'}</h1><p>${paused ? 'Your vehicle and course clock are paused.' : 'Hobby-grade mechanics. Deliberate lines. A miniature world worth taking slowly.'}</p><div class="main-actions">${paused ? '<button id="resume" class="primary">Resume driving <kbd>M</kbd></button>' : ''}<button data-go="map">Drive / select a trail <span>↗</span></button><button data-go="garage">Vehicle garage <span>02</span></button><button data-go="workshop">Tuning workshop <span>03</span></button><button data-go="settings">Settings <span>04</span></button>${paused ? '<button id="leave-trail">Leave trail / main menu</button>' : ''}</div><small>${vehicleSpec(this.state.tune.vehicle).name} · 1:10 scale · ${vehicles.length} vehicles · all available</small></section>`;
+    panel.innerHTML = `<section class="main-menu ${paused ? 'pause-menu' : ''}"><div class="eyebrow">${paused ? 'TRANSMITTER PAUSED' : 'RIDGEBOUND / RC FIELD SIMULATOR'}</div><h1>${paused ? 'Take a breath.' : 'BUILT FOR<br>THE CLIMB.'}</h1><p>${paused ? 'Your vehicle and course clock are paused.' : 'Five locations. Four distinct rigs. One open garage.'}</p><div class="main-actions">${paused ? '<button id="resume" class="primary">Resume driving <kbd>M</kbd></button>' : ''}${paused ? '' : '<button id="quick-drive" class="primary">Drive <span>↗</span></button>'}<button data-go="map">Trails <span>01 — 05</span></button><button data-go="garage">Vehicle garage <span>02</span></button><button data-go="workshop">Tuning workshop <span>03</span></button><button data-go="settings">Settings <span>04</span></button>${paused ? '<button id="leave-trail">Leave trail / main menu</button>' : ''}</div><small>${vehicleSpec(this.state.tune.vehicle).name} · 1:10 scale · ${vehicles.length} vehicles · all available</small></section>`;
     panel
       .querySelectorAll<HTMLElement>('[data-go]')
       .forEach((button) => (button.onclick = () => this.setMode(button.dataset.go as Mode)));
+    if (!paused)
+      this.click('quick-drive', () => {
+        this.started = true;
+        this.onFreeRoam();
+        this.setMode('trail');
+      });
     if (paused) {
       this.click('resume', () => this.setMode('trail'));
       this.click('leave-trail', () => {
@@ -433,7 +486,7 @@ export class UI {
       (((tune.capacity / 2.2) * tune.voltage) / 7.4 - 1) * 0.34 +
       tune.wheelWeight * 4 +
       tune.ballast;
-    panel.innerHTML = `<section class="selection-panel"><div class="eyebrow">FIELD WORKS / OPEN GARAGE</div><h1>Find your line<span>.</span></h1><p class="intro">Every crawler and every tuning part is available from the start.</p><button id="test-drive-vehicle" class="primary">Test-drive ${spec.name} <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><div class="vehicle-cards">${vehicles.map((v) => `<button data-vehicle="${v.id}" class="${spec.id === v.id ? 'selected' : ''}"><span class="paint-dot" style="background:${v.paint}"></span><div><small>READY TO DRIVE</small><b>${v.name}</b><span>${v.category}</span></div></button>`).join('')}</div><div class="vehicle-info"><small>${spec.category}</small><h2>${spec.name}</h2><p>${spec.description}</p><dl><div><dt>Scale / wheelbase</dt><dd>${spec.scale} / ${spec.wheelbase} mm</dd></div><div><dt>Configured mass</dt><dd>${mass.toFixed(2)} kg</dd></div><div><dt>Tyres / drive</dt><dd>${Math.round(tune.radius * 2000)} × ${Math.round(tune.tyreWidth * 1000)} mm / 4WD</dd></div><div><dt>Shock stroke F / R</dt><dd>${Math.round(tune.travel * 1000)} / ${Math.round(tune.rearTravel * 1000)} mm</dd></div><div><dt>Steering demand</dt><dd>${Math.round((tune.endpoint * 180) / Math.PI)}° / ${tune.servoTorque.toFixed(1)} N·m</dd></div><div><dt>Gearing / axles</dt><dd>${tune.gearRatio}:1 × ${tune.axleRatio}:1 / ${tune.axleType}</dd></div><div><dt>Motor / battery</dt><dd>${tune.motorKind === 'brushed' ? tune.turns + 'T' : tune.kv + 'KV'} / ${tune.voltage.toFixed(1)} V</dd></div><div><dt>Body COM mount</dt><dd>${Math.round(spec.bodyHeight * 1000)} mm above chassis origin</dd></div></dl><div class="swatches">${['#496d62', '#c4bca4', '#944d37', '#385d74', '#303936'].map((color) => `<button data-garage-paint="${color}" style="--swatch:${color}" aria-label="Paint ${color}"></button>`).join('')}</div><button id="select-vehicle" class="primary">${selected ? 'Take this rig to tuning' : 'Select ' + spec.name} ↗</button><button id="clean-vehicle" class="secondary">Clean & reset visual wear</button><div class="finish-comparison"><button id="show-current">Current finish</button><button id="show-clean">Clean preview</button></div><p class="part-info">All vehicles and parts are ready to use. Challenge points track optional progress.</p></div></section><div class="inspection-note"><span>${spec.scale} / ROTATE TO INSPECT</span><p>Drag to orbit · scroll to zoom<br>Models and components are real geometry</p></div>`;
+    panel.innerHTML = `<section class="selection-panel"><div class="eyebrow">FIELD WORKS / OPEN GARAGE</div><h1>OPEN GARAGE<span>.</span></h1><p class="intro">Every crawler and every tuning part is available from the start.</p><button id="test-drive-vehicle" class="primary">Test-drive ${spec.name} <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></button><div class="vehicle-cards">${vehicles.map((v) => `<button data-vehicle="${v.id}" class="${spec.id === v.id ? 'selected' : ''}"><span class="paint-dot" style="background:${v.paint}"></span><div><small>READY TO DRIVE</small><b>${v.name}</b><span>${v.category}</span></div></button>`).join('')}</div><div class="vehicle-info"><small>${spec.category}</small><h2>${spec.name}</h2><p>${spec.description}</p><dl><div><dt>Scale / wheelbase</dt><dd>${spec.scale} / ${spec.wheelbase} mm</dd></div><div><dt>Configured mass</dt><dd>${mass.toFixed(2)} kg</dd></div><div><dt>Tyres / drive</dt><dd>${Math.round(tune.radius * 2000)} × ${Math.round(tune.tyreWidth * 1000)} mm / 4WD</dd></div><div><dt>Shock stroke F / R</dt><dd>${Math.round(tune.travel * 1000)} / ${Math.round(tune.rearTravel * 1000)} mm</dd></div><div><dt>Steering demand</dt><dd>${Math.round((tune.endpoint * 180) / Math.PI)}° / ${tune.servoTorque.toFixed(1)} N·m</dd></div><div><dt>Gearing / axles</dt><dd>${tune.gearRatio}:1 × ${tune.axleRatio}:1 / ${tune.axleType}</dd></div><div><dt>Motor / battery</dt><dd>${tune.motorKind === 'brushed' ? tune.turns + 'T' : tune.kv + 'KV'} / ${tune.voltage.toFixed(1)} V</dd></div><div><dt>Body COM mount</dt><dd>${Math.round(spec.bodyHeight * 1000)} mm above chassis origin</dd></div></dl><div class="swatches">${['#496d62', '#c4bca4', '#944d37', '#385d74', '#303936'].map((color) => `<button data-garage-paint="${color}" style="--swatch:${color}" aria-label="Paint ${color}"></button>`).join('')}</div><button id="select-vehicle" class="primary">${selected ? 'Take this rig to tuning' : 'Select ' + spec.name} ↗</button><button id="clean-vehicle" class="secondary">Clean & reset visual wear</button><div class="finish-comparison"><button id="show-current">Current finish</button><button id="show-clean">Clean preview</button></div><p class="part-info">All vehicles and parts are ready to use. Challenge points track optional progress.</p></div></section><div class="inspection-note"><span>${spec.scale} / ROTATE TO INSPECT</span><p>Drag to orbit · scroll to zoom<br>Models and components are real geometry</p></div>`;
     const select = () => {
       if (!selected) this.onVehicle(spec.id);
     };

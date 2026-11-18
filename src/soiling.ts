@@ -9,6 +9,8 @@ export type Exposure = {
   omega: number;
   radius: number;
   slip: number;
+  wetness?: number;
+  mudDepth?: number;
 };
 export function cleanCondition(): SurfaceCondition {
   return { mud: Array(8).fill(0), dust: 0, wet: 0, scuffs: 0 };
@@ -38,7 +40,10 @@ export function updateCondition(
       load = Math.min(1.5, s.load / 8),
       spray = Math.min(2, Math.abs(s.slip));
     if (s.contact && s.surface === 'Mud' && motion > 0.002) {
-      const deposit = Math.min(0.4, motion * (0.5 + spray) * load);
+      const deposit =
+        Math.min(0.4, motion * (0.5 + spray) * load) *
+        (s.wetness ?? 0.85) *
+        (0.75 + Math.min(0.75, (s.mudDepth ?? 0.03) / 0.06));
       state.mud[i] = Math.min(1, state.mud[i] + dt * deposit);
       state.mud[i + 4] = Math.min(1, state.mud[i + 4] + dt * deposit * (0.22 + spray * 0.25));
       mudWet += deposit;

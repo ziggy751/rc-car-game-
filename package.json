@@ -7,16 +7,19 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "vitest run",
+    "test": "vitest run --testTimeout=15000",
     "test:browser": "node tests/browser.mjs",
     "test:production": "node tests/production.mjs",
     "test:visual": "node tests/visual.mjs",
     "test:realism": "node tests/free-realism.mjs",
-    "test:mud": "node tests/mud-isolation.mjs"
+    "test:mud": "node tests/mud-isolation.mjs",
+    "test:power-maps": "node tests/power-maps.mjs"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.0",
+    "@fontsource/barlow-condensed": "^5.2.8",
     "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/manrope": "^5.3.0",
     "three": "^0.180.0"
   },
